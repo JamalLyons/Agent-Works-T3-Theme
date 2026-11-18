@@ -20,6 +20,9 @@ An animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3code)
 
 ## Install
 
+> [!WARNING]
+> Install only with `./install.sh`. Don't use **Add theme** in T3 Code's settings. T3 loads the animated background only for themes in its themes folder. A copy added with **Add theme** shows a blank scene and hides the working copy. If you already added one that way, remove it in **Settings → Appearance** first.
+
 ```sh
 ./install.sh
 ```
@@ -30,7 +33,11 @@ The script builds the theme and copies two files into `~/.t3/userdata/themes`:
 - `agent-works.json`, the theme itself
 - `agent-works.webp`, the animated background
 
-To use a different themes folder, set `T3_THEMES_DIR`. Run the script again after any change.
+**Updating:** run `./install.sh` again. If Agent Works is already installed, it asks before replacing it. Pass `-y` to skip the question.
+
+**Uninstalling:** run `./uninstall.sh`. It lists the files it will delete and asks before deleting anything. It deletes only Agent Works' own files and leaves everything else in the folder alone. Afterwards, pick another theme in **Settings → Appearance**.
+
+To use a different themes folder with either script, set `T3_THEMES_DIR`.
 
 ## How it works
 
@@ -47,20 +54,19 @@ T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image f
 | `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row and composer effects, and the streaming cursor. |
 | `render/render.sh` | Renders `out/factory.svg` in headless Brave with bloom, light shafts, dust and depth. It captures 300 frames and encodes `media/agent-works.webp`. Takes about 6.5 minutes and needs Brave, `img2webp` and Node. |
 | `render/preview.sh` | Builds `media/preview.gif` from the rendered frames plus the light overlay. Needs `ffmpeg`. |
-| `install.sh` | Builds the theme and copies the JSON and WebP into T3 Code's themes folder. |
+| `install.sh` | Builds the theme and copies the JSON and WebP into T3 Code's themes folder. If a copy is already installed, it asks before replacing it. |
+| `uninstall.sh` | Deletes only `agent-works.json` and its background image from the themes folder, after you confirm. |
 
 **Rebuild steps:**
 
 ```sh
 render/render.sh      # only after scene changes in gen.py
 render/preview.sh     # optional: refresh the README GIF
-./install.sh
+./install.sh -y
 ```
 
 **Rules for scene changes:**
 - Everything in the scene must loop evenly in 20 seconds, so the WebP has no visible jump.
 - Keep the middle of the wall (x 133 to 347 in scene units) calm, because the chat column covers it.
-
-**Installing:** install through `./install.sh`, not **Add theme**. T3 only loads a background image for themes in its themes folder. A copy added with **Add theme** has no background and hides the folder copy, so if one exists, remove it in Settings → Appearance.
 
 **Notes for agents:** [AGENTS.md](AGENTS.md) explains the build pipeline, the scene coordinates and the T3 Code internals this theme depends on.

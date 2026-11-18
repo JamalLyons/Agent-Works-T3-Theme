@@ -19,7 +19,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 - `python3 gen.py out` takes about a second. It writes `out/agent-works.json`, `out/factory.svg` and `out/lights.svg`. It asserts that the CSS is at most 50,000 characters and prints the count, currently about 13.7K.
 - `render/render.sh [scale=3] [quality=85]` takes about 6.5 minutes. Run it only when the scene changes in `gen.py`. It writes `media/agent-works.webp` (1440×960, 300 frames, 15 fps, 20 s loop, about 4.6 MB) and `media/agent-works-poster.png`. It runs `npm i` inside `render/` on its first run.
 - `render/preview.sh` takes about 30 seconds. It reuses `render/build/frames/` from the last render, composites `out/lights.svg` over them and writes `media/preview.gif`: 10 s idle, then the lights flicker on.
-- `./install.sh` builds the theme JSON, removes `id` from it (the file name supplies the ID), and copies the JSON and WebP into `~/.t3/userdata/themes/`. Override the folder with `T3_THEMES_DIR`.
+- `./install.sh [-y]` builds the theme JSON, removes `id` from it (the file name supplies the ID), and copies the JSON and WebP into `~/.t3/userdata/themes/`. Override the folder with `T3_THEMES_DIR`.
 
 **Tools:** Brave at `/Applications/Brave Browser.app` (override with the `BRAVE` env var), plus `img2webp`, `ffmpeg` and Node, all from Homebrew. Python uses only the standard library.
 
@@ -33,7 +33,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 | `render/fx.js` | Draws the canvas effects: shading and ambient occlusion, a calm center band, light shafts, dust motes, backlit steam and CRT structure. Every effect is a pure function of `t` and periodic over 20 s. |
 | `render/capture.mjs` | Seeks every animation to time `t` (`document.getAnimations()` → pause, set `currentTime`) and calls `AW_drawFx(t)`, then screenshots each frame. Passing a 4th argument such as `0,1.5,12.4` captures single test frames to `t<sec>.png`. |
 | `render/preview.mjs` + `preview.sh` | Builds the README GIF. |
-| `install.sh` | Publishes the theme into T3 Code's themes folder. |
+| `install.sh` / `uninstall.sh` | Install or update the theme in T3 Code's themes folder, or remove it. Both ask before changing an existing install. `-y` skips the question. Without `-y`, a non-interactive run (no terminal) exits without changing anything. `uninstall.sh` deletes only `agent-works.{json,webp,png,jpg,jpeg}` and never follows symlinks. |
 
 ## Scene coordinates and conventions (gen.py)
 
