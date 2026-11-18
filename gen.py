@@ -135,6 +135,7 @@ defs.append("<pattern id='cl' width='60' height='30' patternUnits='userSpaceOnUs
             f"<path fill='{G[11]}' d='M6 6h10v1h3v2H3V7h3zM34 15h8v1h3v2H30v-2h4zM48 3h6v1h2v1h-9V4h1z'/>"
             f"<path fill='{G[9]}' d='M3 9h16v1H3zM30 18h15v1H30z'/></pattern>")
 WINS = ((142, 96), (296, 96))
+GLASS_Y = (20 + WINS[0][1] - 17, 46 + WINS[0][1] - 17)   # glass top/bottom in scene space (99, 125)
 for wx, wy in WINS:
     o = wy - 17
     cid = f'w{wx}'
@@ -203,6 +204,7 @@ parts.append(''.join(g([(A1, x, 239, 2, 2)], cls=f'ld d{i}') for i, x in enumera
 parts.append(g([(K, 15, 158, 7, 2), (G[5], 21, 157, 3, 4), (G[6], 8, 162, 8, 2)]))
 parts.append("<g class='wo'>" + g([(G[13], 13, 159, 2, 2), (A1, 12, 158, 1, 1), (A1, 15, 161, 1, 1)], cls='wa') +
              ''.join(g([(A1, x, 161, 1, 1), (G[13], x + 2, 163, 1, 1)], cls=f'wf f{i}') for i, x in enumerate((11, 14, 16))) + '</g>')
+PANEL_LEDS = [(8, 221), (12, 221)]
 parts.append(g([(A1, 8, 221, 2, 2)], cls='pl a') + g([(G[11], 12, 221, 2, 2)], cls='pl c') +
              g([(G[9], 8, 224, 9, 1)], cls='pw'))
 for i in range(3):
@@ -212,7 +214,8 @@ parts.append(g([(K, 446, 120, 34, 3), (G[6], 447, 120, 33, 1), (K, 450, 123, 2, 
                box_sprite(452, 106) + [(K, 470, 110, 8, 10), (G[7], 471, 111, 6, 8)]))
 
 # hanging lamps above the side stations + light cones
-for lx in (100, 382):
+LAMPS = (100, 382)   # cord x; the unlit bulb is the 3x1 rect at (lx-1, 177)
+for lx in LAMPS:
     parts.append(g([(K, lx, 6, 1, 166), (K, lx - 4, 172, 9, 5), (G[6], lx - 3, 172, 7, 1), (G[4], lx - 3, 173, 7, 3),
                     (AD, lx - 1, 177, 3, 1)]))
 
@@ -226,6 +229,7 @@ stamper_housing = g(sh([(K, 157, -150, 6, 176), (G[4], 158, -150, 4, 176),
                         (K, 150, 33, 20, 12), (G[3], 151, 34, 18, 10),
                         (G[3], 149, 52, 22, 1), (G[3], 149, 56, 22, 1), (G[3], 149, 60, 22, 1),
                         (K, 148, 76, 24, 3), (G[4], 156, 76, 8, 3)], PX), cls='pk')
+PRESS_LEDS = [(x, y + DY) for _, x, y, _, _ in sh([(0, 153, 37, 2, 2), (0, 158, 37, 2, 2), (0, 163, 37, 2, 2)], PX)]
 stamper_lights = (g(sh([(A1, 153, 37, 2, 2)], PX), cls='pl a') + g(sh([(G[11], 158, 37, 2, 2)], PX), cls='pl b') +
                   g(sh([(A2, 163, 37, 2, 2)], PX), cls='pl c') + g(sh([(G[9], 153, 41, 13, 1)], PX), cls='pw'))
 # head: ram 157..163, plate 145..175 x 82..91, die 150..170 x 91..93. Rest -4px, hit +6px (die bottom on box top 98, +1 squash)
@@ -459,6 +463,24 @@ css = """
 css = ''.join(l.strip() for l in css.strip().splitlines())
 css = re.sub(r'\s*([{}:;,])\s*', r'\1', css).replace(';}', '}')
 
+# ---------- scene anchors ----------
+# The one place the reactive overlay (fx.py) and the render effects (render/fx.js) learn where
+# things are drawn. Both layers must read positions from here, never retype them.
+PRESS_HIT_PCT, PRESS_PERIOD = 9.5, 4      # .pr keyframe: die lands at 9.5% of the 4 s cycle
+WELD_OFF_PCT, WELD_PERIOD = 44, 5         # .wo keyframe: arc on until 44% of 5 s
+assert f'{PRESS_HIT_PCT:g}%,14%{{transform:translateY(6px)' in css, 'press hit keyframe moved; update PRESS_HIT_PCT'
+assert f'.wo{{animation:wo {WELD_PERIOD}s' in css and f'{WELD_OFF_PCT}%{{opacity:0}}' in css, 'weld keyframe moved'
+ANCHORS = {
+    'loop': 20, 'floorY': FY,
+    'lamps': list(LAMPS), 'bulbY': 177,
+    'windows': [wx for wx, _ in WINS], 'glassY': list(GLASS_Y),
+    'sign': {'x': sx, 'y': SY},
+    'belt': {'x0': BX0, 'x1': BX1, 'skirtY': 119 + DY},
+    'pressLeds': PRESS_LEDS, 'panelLeds': PANEL_LEDS,
+    'pressHit': {'x': 160 + PX, 'y': 97 + DY, 't': round(PRESS_HIT_PCT / 100 * PRESS_PERIOD, 4), 'period': PRESS_PERIOD},
+    'weld': {'x': 14, 'y': 160, 'on': round(WELD_OFF_PCT / 100 * WELD_PERIOD, 4), 'period': WELD_PERIOD},
+}
+
 svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
        f"shape-rendering='crispEdges'><style>{css}</style><defs>{''.join(defs)}</defs>"
        f"<path fill='{G[3]}' d='M0 0h480v320H0z'/>{scene}</svg>")
@@ -564,4 +586,11 @@ theme = {"id": TID, "version": 1, "name": "Agent Works", "appearance": "dark", "
          "colors": colors, "css": theme_css}
 json.dump(theme, open(f'{sys.argv[1]}/{TID}.json', 'w'))
 open(f'{sys.argv[1]}/lights.svg', 'w').write(fx.overlay(globals()))
+json.dump(ANCHORS, open(f'{sys.argv[1]}/anchors.json', 'w'), indent=1)
+
+# every LED the overlay lights must sit exactly on an LED the scene draws
+_scene_svg = svg_raw
+for _x, _y in re.findall(r"class='ld[^']*'><path fill='[^']+' d='M(\d+) (\d+)h2v2", fx.overlay(globals())):
+    _x, _y = int(_x), int(_y)
+    assert (_x, _y) in PRESS_LEDS + PANEL_LEDS, f'overlay LED at ({_x},{_y}) has no scene LED under it'
 print(f'{TID}: css {len(theme_css)} / 50000')

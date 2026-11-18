@@ -2,8 +2,9 @@
 // Everything is a pure function of t (seconds) and periodic in LOOP, so the WebP loops seamlessly.
 // Drawing is done in scene units (480x320) and scaled by S.
 (() => {
-  const LOOP = 20, TAU = Math.PI * 2;
-  const W = 480, H = 320, FY = 282;
+  const AN = window.AW_ANCHORS;   // scene positions from gen.py (out/anchors.json)
+  const LOOP = AN.loop, TAU = Math.PI * 2;
+  const W = 480, H = 320, FY = AN.floorY;
   const AMBER = '255,181,71';
   const S = window.AW_SCALE;
   const ph = (t, n = 1) => (TAU * n * t) / LOOP; // whole cycles per loop
@@ -23,9 +24,9 @@
   const light = mk('light');   // screen: shafts, motes, steam, embers
   const crt = mk('crt');       // static phosphor / scanline structure
 
-  // window geometry (matches gen.py): glass x wx+2..wx+42, y 99..125; shaft hits floor shifted +20
-  const WINS = [142, 296];
-  const GLASS_Y0 = 99, GLASS_Y1 = 125;
+  // window geometry: glass x wx+2..wx+42, y glassY; shaft hits floor shifted +20
+  const WINS = AN.windows;
+  const [GLASS_Y0, GLASS_Y1] = AN.glassY;
   const shaftPoly = (wx, t) => {
     const sway = Math.sin(ph(t)) * 1.5;
     return [[wx + 2, GLASS_Y1], [wx + 42, GLASS_Y1], [wx + 64 + sway, FY + 6], [wx + 20 + sway, FY + 6]];
@@ -163,28 +164,31 @@
       c.fillRect(sx, sy, m.s, m.s);
     }
     // embers: dim amber bulbs (lamps off) breathing very slightly
-    for (const lx of [100.5, 382.5]) {
+    const by = AN.bulbY + 0.5;
+    for (const lx of AN.lamps.map((x) => x + 0.5)) {
       const a = 0.10 + 0.03 * Math.sin(ph(t, 2) + lx);
-      const g2 = c.createRadialGradient(lx, 177.5, 0, lx, 177.5, 9);
+      const g2 = c.createRadialGradient(lx, by, 0, lx, by, 9);
       g2.addColorStop(0, `rgba(${AMBER},${a})`); g2.addColorStop(1, `rgba(${AMBER},0)`);
-      c.fillStyle = g2; c.beginPath(); c.arc(lx, 177.5, 9, 0, TAU); c.fill();
+      c.fillStyle = g2; c.beginPath(); c.arc(lx, by, 9, 0, TAU); c.fill();
     }
-    // press impact: amber flash on the beat (pr keyframe 9.5% of 4 s = 0.38 s)
-    const pt = ((t % 4) + 4) % 4 - 0.38;
+    // press impact: amber flash on the beat (.pr keyframe hit, from gen.py)
+    const P = AN.pressHit;
+    const pt = ((t % P.period) + P.period) % P.period - P.t;
     if (pt >= 0 && pt < 0.6) {
       const a = 0.55 * Math.exp(-pt * 7);
-      const g2 = c.createRadialGradient(356, 247, 0, 356, 247, 34);
+      const g2 = c.createRadialGradient(P.x, P.y, 0, P.x, P.y, 34);
       g2.addColorStop(0, `rgba(${AMBER},${a})`); g2.addColorStop(1, `rgba(${AMBER},0)`);
-      c.fillStyle = g2; c.beginPath(); c.arc(356, 247, 34, 0, TAU); c.fill();
+      c.fillStyle = g2; c.beginPath(); c.arc(P.x, P.y, 34, 0, TAU); c.fill();
     }
-    // welding arc flicker on the left wall (wo: on during first 44% of 5 s)
-    const wt = ((t % 5) + 5) % 5;
-    if (wt < 2.2) {
+    // welding arc flicker on the left wall (.wo keyframe on-window, from gen.py)
+    const Wd = AN.weld;
+    const wt = ((t % Wd.period) + Wd.period) % Wd.period;
+    if (wt < Wd.on) {
       const fl = 0.6 + 0.4 * Math.abs(Math.sin(t * 47));
-      const g2 = c.createRadialGradient(14, 160, 0, 14, 160, 30);
+      const g2 = c.createRadialGradient(Wd.x, Wd.y, 0, Wd.x, Wd.y, 30);
       g2.addColorStop(0, `rgba(${AMBER},${0.30 * fl})`); g2.addColorStop(0.3, `rgba(255,220,170,${0.10 * fl})`);
       g2.addColorStop(1, `rgba(${AMBER},0)`);
-      c.fillStyle = g2; c.beginPath(); c.arc(14, 160, 30, 0, TAU); c.fill();
+      c.fillStyle = g2; c.beginPath(); c.arc(Wd.x, Wd.y, 30, 0, TAU); c.fill();
     }
   }
 

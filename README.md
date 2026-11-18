@@ -50,7 +50,7 @@ T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image f
 
 | File | What it does |
 |---|---|
-| `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works.json`, `out/factory.svg` and `out/lights.svg`. |
+| `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. |
 | `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row and composer effects, and the streaming cursor. |
 | `render/render.sh` | Renders `out/factory.svg` in headless Brave with bloom, light shafts, dust and depth. It captures 300 frames and encodes `media/agent-works.webp`. Takes about 6.5 minutes and needs Brave, `img2webp` and Node. |
 | `render/preview.sh` | Builds `media/preview.gif` from the rendered frames plus the light overlay. Needs `ffmpeg`. |

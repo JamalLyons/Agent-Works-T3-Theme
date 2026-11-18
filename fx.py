@@ -17,8 +17,10 @@ ON = f'{CONV}:has({LIVE})'
 def overlay(ns):
     """Lights-on layer: lamp cones and pools, lit sign, chase lights, LEDs."""
     g, text, R = ns['g'], ns['text'], ns['R']
-    BX0, BX1, DY = ns['BX0'], ns['BX1'], ns['DY']
-    sx, SY = ns['sx'], ns['SY']
+    an = ns['ANCHORS']
+    BX0, BX1 = an['belt']['x0'], an['belt']['x1']
+    sx, SY = an['sign']['x'], an['sign']['y']
+    by = an['bulbY']
     defs = (
         f"<linearGradient id='c' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='{A}' stop-opacity='.42'/>"
         f"<stop offset='1' stop-color='{A1}' stop-opacity='0'/></linearGradient>"
@@ -28,21 +30,22 @@ def overlay(ns):
         f"<stop offset='.25' stop-color='{A}' stop-opacity='.45'/><stop offset='1' stop-color='{A1}' stop-opacity='0'/></radialGradient>"
     )
     s = ''
-    for lx in ns.get('LAMPS', (100, 382)):
-        s += (f"<path fill='url(#c)' d='M{lx - 4} 178L{lx + 5} 178L{lx + 34} 270L{lx - 33} 270Z'/>"
+    for lx in an['lamps']:
+        s += (f"<path fill='url(#c)' d='M{lx - 4} {by + 1}L{lx + 5} {by + 1}L{lx + 34} 270L{lx - 33} 270Z'/>"
               f"<ellipse fill='url(#p)' cx='{lx + .5}' cy='268' rx='46' ry='9'/>"
-              f"<circle fill='url(#b)' cx='{lx + .5}' cy='178' r='16'/>"
-              f"<path fill='{A2}' d='{R(lx - 1, 177, 3, 1)}'/>"
+              f"<circle fill='url(#b)' cx='{lx + .5}' cy='{by + 1}' r='16'/>"
+              f"<path fill='{A2}' d='{R(lx - 1, by, 3, 1)}'/>"
               )
     # sign: warm glow behind, amber letters on top
     s += f"<ellipse fill='url(#p)' cx='240' cy='{SY + 5}' rx='44' ry='14'/>"
     s += g(text('AGENT WORKS', sx, SY + 3, A2), cls='sg')
     # chase lights along the belt skirt, running with the belt
-    y = 119 + DY
+    y = an['belt']['skirtY']
     s += f"<path class='ch' stroke='{A}' stroke-width='2' stroke-dasharray='2 14' d='M{BX0 + 10} {y}H{BX1 - 4}'/>"
     # control panel and press LEDs
-    s += g([(A, 8, 221, 2, 2)], cls='ld') + g([(A1, 12, 221, 2, 2)], cls='ld d')
-    s += g([(A, 341, 187, 2, 2), (A2, 346, 187, 2, 2), (A1, 351, 187, 2, 2)], cls='ld d')
+    (p0, p1), (q0, q1, q2) = an['panelLeds'], an['pressLeds']
+    s += g([(A, *p0, 2, 2)], cls='ld') + g([(A1, *p1, 2, 2)], cls='ld d')
+    s += g([(A, *q0, 2, 2), (A2, *q1, 2, 2), (A1, *q2, 2, 2)], cls='ld d')
     st = (".ch{animation:k .6s linear infinite}@keyframes k{to{stroke-dashoffset:-16}}"
           ".ld{animation:l .8s steps(1) infinite}.d{animation-delay:-.4s}@keyframes l{50%{opacity:.2}}"
           ".sg{animation:sg 6s steps(1) infinite}@keyframes sg{0%,100%{opacity:1}71%{opacity:.4}72%{opacity:1}}"

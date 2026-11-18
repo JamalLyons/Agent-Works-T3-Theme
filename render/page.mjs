@@ -1,6 +1,10 @@
-// Builds render/build/page.html from out/factory.svg + fx.js
+// Builds render/build/page.html from out/factory.svg + out/anchors.json + fx.js
 import fs from 'node:fs';
+import path from 'node:path';
 const [svgPath, outPath, scale = '3'] = process.argv.slice(2);
+// scene anchors written by gen.py next to factory.svg; fx.js reads every position from here
+const anchors = fs.readFileSync(path.join(path.dirname(svgPath), 'anchors.json'), 'utf8');
+const FY = JSON.parse(anchors).floorY;
 const S = +scale, W = 480 * S, H = 320 * S;
 let svg = fs.readFileSync(svgPath, 'utf8')
   .replace(/@media \(prefers-reduced-motion:reduce\)\{[^}]*\{[^}]*\}\}/, '');
@@ -16,9 +20,9 @@ html,body{margin:0;background:#0c0d0e;overflow:hidden}
 #bloom{filter:url(#thr) blur(${3 * S}px);mix-blend-mode:screen;opacity:.55}
 #bloom2{filter:url(#thr) blur(${10 * S}px);mix-blend-mode:screen;opacity:.45}
 /* floor reflection: mirrored copy about the floor line, faded */
-#refl{transform-origin:0 ${282 * S}px;transform:scaleY(-1);filter:blur(${0.8 * S}px) brightness(.9);
+#refl{transform-origin:0 ${FY * S}px;transform:scaleY(-1);filter:blur(${0.8 * S}px) brightness(.9);
   opacity:.16;mix-blend-mode:screen;
-  -webkit-mask:linear-gradient(to bottom,transparent ${282 * S}px,#000 ${282 * S + 1}px,transparent ${320 * S}px)}
+  -webkit-mask:linear-gradient(to bottom,transparent ${FY * S}px,#000 ${FY * S + 1}px,transparent ${320 * S}px)}
 #shade{mix-blend-mode:multiply}
 #light{mix-blend-mode:screen}
 #crt{mix-blend-mode:normal}
@@ -40,7 +44,7 @@ html,body{margin:0;background:#0c0d0e;overflow:hidden}
 <div id="glow"></div>
 <canvas id="crt"></canvas>
 </div>
-<script>window.AW_SCALE=${S};</script>
+<script>window.AW_SCALE=${S};window.AW_ANCHORS=${anchors};</script>
 <script>${fs.readFileSync(new URL('./fx.js', import.meta.url), 'utf8')}</script>
 <script>
 window.AW_seek = (t) => {
