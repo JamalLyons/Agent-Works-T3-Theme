@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Generates the 'Agent Works' pixel factory theme for T3 Code."""
-import json, sys, urllib.parse
+import json, re, sys, urllib.parse
 
 # ---------- palette: old B&W CRT grays ----------
 G = ['#0c0d0e', '#141517', '#1c1e20', '#25272a', '#2f3235', '#3b3e42',
      '#4a4d51', '#5c5f63', '#717478', '#888b8e', '#a3a5a7', '#c1c3c3',
      '#dcdddb', '#f0f0ec']
 K = G[0]
+A1, A2, AD = '#ffb547', '#ff9a2e', '#5a4122'   # amber accents (lit, deep, unlit)
 
 
 def R(x, y, w, h):
@@ -161,7 +162,7 @@ sx = 240 - 22
 SY = 56
 parts.append(g([(K, sx - 4, SY, 51, 11), (G[2], sx - 3, SY + 1, 49, 9), (G[5], sx - 3, SY + 1, 49, 1),
                 (K, sx + 4, 6, 1, SY - 6), (K, sx + 38, 6, 1, SY - 6)]))
-parts.append(g(text('AGENT WORKS', sx, SY + 3, G[11]), cls='sg'))
+parts.append(g(text('AGENT WORKS', sx, SY + 3, G[6])))
 
 # clock (between the windows)
 cx, cy = 240, 112
@@ -197,7 +198,12 @@ pipes = [(G[5], 0, 196, 30, 4), (G[7], 0, 196, 30, 1), (G[3], 0, 199, 30, 1), (G
          # gauge
          (K, 470, 196, 9, 9), (G[11], 471, 197, 7, 7), (K, 474, 199, 1, 3)]
 parts.append(g(pipes))
-parts.append(g([(G[13], 8, 221, 2, 2)], cls='pl a') + g([(G[11], 12, 221, 2, 2)], cls='pl c') +
+parts.append(''.join(g([(A1, x, 239, 2, 2)], cls=f'ld d{i}') for i, x in enumerate((5, 9, 13, 17))))
+# welding torch on the left wall pipe (arc at 14,160; sparks fall to the 196 pipe)
+parts.append(g([(K, 15, 158, 7, 2), (G[5], 21, 157, 3, 4), (G[6], 8, 162, 8, 2)]))
+parts.append("<g class='wo'>" + g([(G[13], 13, 159, 2, 2), (A1, 12, 158, 1, 1), (A1, 15, 161, 1, 1)], cls='wa') +
+             ''.join(g([(A1, x, 161, 1, 1), (G[13], x + 2, 163, 1, 1)], cls=f'wf f{i}') for i, x in enumerate((11, 14, 16))) + '</g>')
+parts.append(g([(A1, 8, 221, 2, 2)], cls='pl a') + g([(G[11], 12, 221, 2, 2)], cls='pl c') +
              g([(G[9], 8, 224, 9, 1)], cls='pw'))
 for i in range(3):
     parts.append(f"<g transform='translate(140 120)'><g class='stm t{i}'><path fill='{G[11]}' d='M308 57h3v1h1v2h-5v-2h1z'/></g></g>")
@@ -207,9 +213,8 @@ parts.append(g([(K, 446, 120, 34, 3), (G[6], 447, 120, 33, 1), (K, 450, 123, 2, 
 
 # hanging lamps above the side stations + light cones
 for lx in (100, 382):
-    parts.append(f"<path class='lc' fill='{G[13]}' d='M{lx - 4} 178L{lx + 5} 178L{lx + 26} 262L{lx - 25} 262Z' opacity='.05'/>")
     parts.append(g([(K, lx, 6, 1, 166), (K, lx - 4, 172, 9, 5), (G[6], lx - 3, 172, 7, 1), (G[4], lx - 3, 173, 7, 3),
-                    (G[13], lx - 1, 177, 3, 1)]))
+                    (AD, lx - 1, 177, 3, 1)]))
 
 # ---------- line layer (old coords, shifted down by DY) ----------
 PX = S[3] + 8 - 160          # press x offset from the old 160-centered drawing
@@ -220,11 +225,18 @@ stamper_housing = g(sh([(K, 157, -150, 6, 176), (G[4], 158, -150, 4, 176),
                         (K, 145, 26, 30, 50), (G[6], 146, 27, 28, 48), (G[8], 146, 27, 28, 2), (G[4], 146, 73, 28, 2),
                         (K, 150, 33, 20, 12), (G[3], 151, 34, 18, 10),
                         (G[3], 149, 52, 22, 1), (G[3], 149, 56, 22, 1), (G[3], 149, 60, 22, 1),
-                        (K, 148, 76, 24, 3), (G[4], 157, 76, 6, 6)], PX))
-stamper_lights = (g(sh([(G[13], 153, 37, 2, 2)], PX), cls='pl a') + g(sh([(G[11], 158, 37, 2, 2)], PX), cls='pl b') +
-                  g(sh([(G[12], 163, 37, 2, 2)], PX), cls='pl c') + g(sh([(G[9], 153, 41, 13, 1)], PX), cls='pw'))
-stamper_head = g(sh([(G[9], 158, 78, 4, 6), (G[11], 158, 78, 1, 6), (K, 148, 84, 24, 6), (G[9], 149, 85, 22, 4),
-                     (G[11], 149, 85, 22, 1), (G[6], 150, 89, 20, 1)], PX), cls='pr')
+                        (K, 148, 76, 24, 3), (G[4], 156, 76, 8, 3)], PX), cls='pk')
+stamper_lights = (g(sh([(A1, 153, 37, 2, 2)], PX), cls='pl a') + g(sh([(G[11], 158, 37, 2, 2)], PX), cls='pl b') +
+                  g(sh([(A2, 163, 37, 2, 2)], PX), cls='pl c') + g(sh([(G[9], 153, 41, 13, 1)], PX), cls='pw'))
+# head: ram 157..163, plate 145..175 x 82..91, die 150..170 x 91..93. Rest -4px, hit +6px (die bottom on box top 98, +1 squash)
+stamper_head = g(sh([(K, 157, 56, 6, 26), (G[9], 158, 56, 4, 26), (G[11], 158, 56, 1, 26),
+                     (K, 145, 82, 30, 9), (G[8], 146, 83, 28, 7), (G[11], 146, 83, 28, 1), (G[5], 146, 89, 28, 1),
+                     (G[4], 148, 85, 2, 2), (G[4], 170, 85, 2, 2), (K, 150, 91, 20, 2), (G[6], 151, 91, 18, 1)], PX), cls='pr')
+# impact: flash line + sparks kicking sideways (right side is the mirror about x=356)
+spk = g([(G[13], 346, 97, 20, 1)], cls='fl')
+for side in ('', " transform='translate(712 0) scale(-1 1)'"):
+    spk += (f"<g{side}>" + g([(G[13], 345, 96, 2, 1), (A1, 343, 94, 1, 1), (A1, 341, 97, 1, 1), (G[13], 344, 93, 1, 1)], cls='spa') +
+            g([(A1, 346, 95, 1, 1), (A2, 342, 95, 2, 1), (G[13], 340, 96, 1, 1), (A1, 344, 91, 1, 1)], cls='spb') + '</g>')
 
 # ---------- belt: three spans (left, fast middle, right) joined by drive gears ----------
 BX0, BX1 = S[0] - 14, S[4] + 16
@@ -255,7 +267,7 @@ for i in range(5):
     d = f" style='animation-delay:-{i * 4}s'"
     b += g([(G[3], 3, 6, 6, 4), (G[11], 4, 7, 4, 2), (G[3], 5, 7, 1, 1), (G[3], 7, 8, 1, 1)], cls='lab', extra=d)
     b += g([(G[12], 7, 0, 2, 14), (G[13], 7, 0, 1, 14)], cls='tap', extra=d)
-    boxes += f"<g class='bx' style='animation-delay:-{i * 4}s'><g transform='translate(0 98)'>{b}</g></g>"
+    boxes += f"<g class='bx'{d}><g transform='translate(0 98)'><g class='sq'{d}>{b}</g></g></g>"
 
 # ---------- chute (runs up to the ceiling) ----------
 CX = S[0] - 4
@@ -323,6 +335,26 @@ broom = g([(K, -2, 10, 1, 14), (G[8], -4, 24, 5, 3), (G[6], -4, 26, 5, 1)])
 walker2 = (f"<g class='wk2'><g transform='translate(0 {FY + 8}) scale(.82)'>"
            f"<g class='wb'>{robot_body(None)}{robot_head('ey e2')}{broom}</g>{legsA}{legsB}</g></g>")
 
+# ---------- foreground (near-black, nearer than the line, moves faster) ----------
+FG = '#070708'
+FG2 = '#18191b'
+FR = '#3b3e42'   # cool rim light from the windows
+defs.append(f"<pattern id='cn' width='8' height='8' patternUnits='userSpaceOnUse'><path fill='{FG}' d='M0 0h4v6H0zM1 6h2v2H1z'/>"
+            f"<path fill='{FG2}' d='M1 1h2v4H1z'/></pattern>")
+# drawn at half size, shown at 2x: block y 236..256, hook tip ~(482,284), bowl bottom ~y 310
+hook = [(FG, -7, 118, 14, 5), (FG2, -6, 118, 12, 1), (FG, -9, 120, 18, 2),   # block
+        (FG, -2, 123, 4, 3), (FG, -5, 126, 10, 2),                         # shank + collar
+        (FG, -1, 128, 3, 8), (FG, -3, 136, 5, 3), (FG, -2, 139, 7, 2),
+        (FG, 4, 133, 3, 7), (FG, 5, 130, 2, 3),                            # curl, tip at local (6,130)
+        (FG2, 0, 129, 1, 6), (FR, -7, 118, 1, 4), (FR, -9, 120, 1, 2), (FR, -5, 126, 1, 2), (FR, -1, 128, 1, 8),
+        (FR, -3, 136, 1, 3), (FR, 4, 133, 1, 5), (FR, 5, 130, 1, 3)]
+fg_hook = (f"<g class='hk'><g transform='translate(464 0) scale(2)'><g class='hs'><path fill='url(%23cn)' transform='translate(-2 0)' d='M0 -20h4v138H0z'/>{g(hook)}</g></g></g>")
+fg_chain = (f"<g transform='translate(74 0)'><g class='ch'><path fill='url(%23cn)' d='M0 0h4v64H0z'/>"
+            f"{g([(FG, -2, 64, 8, 3), (FG, -1, 67, 6, 2)])}</g></g>")
+fg_pipe = g([(FG, 0, 300, 96, 14), (FG2, 0, 301, 96, 1), (FG, 92, 296, 8, 22), (FG2, 93, 297, 1, 20),
+             (FG, 40, 296, 6, 22), (FG2, 41, 297, 1, 20), (FG, 0, 314, 120, 6)])
+fg = f"<g class='fg'>{fg_chain}{fg_pipe}{fg_hook}</g>"
+
 # ---------- CRT roll band ----------
 defs.append("<linearGradient id='rb' x1='0' y1='0' x2='0' y2='1'>"
             f"<stop offset='0' stop-color='{G[13]}' stop-opacity='0'/>"
@@ -333,12 +365,11 @@ roll = f"<g class='rl'><path fill='url(%23rb)' d='M0 -40h{W}v40H0z'/></g>"
 # ---------- order ----------
 LT = f"<g transform='translate(0 {DY})'>"
 scene = ''.join(parts)
-scene += LT + stamper_housing + stamper_lights
+scene += LT + stamper_head + stamper_housing + stamper_lights
 scene += w_scan + w_tape + w_lever + belt_back
-scene += stamper_head
-scene += bin_back + boxes + beam + belt_top + gears + chute + lever + '</g>'
+scene += bin_back + boxes + spk + beam + belt_top + gears + chute + lever + '</g>'
 scene += g(floor) + floor_lines + g(haz) + LT + belt_front + bin_front + '</g>'
-scene += g(stack) + g(plant) + walker2 + walker + roll
+scene += g(stack) + g(plant) + walker2 + walker + fg + roll
 
 # ---------- animation css (inside svg) ----------
 # Cycle = 4s: 0-37.5% belt paused (workers act), 37.5-100% belt moves 64px.
@@ -347,17 +378,19 @@ css = """
 .bx{animation:bx 20s infinite}
 @keyframes bx{
 0%{transform:translate(36px,-36px);opacity:1;animation-timing-function:ease-in}
-3%{transform:translate(36px,0)}3.8%{transform:translate(36px,-3px)}4.6%{transform:translate(36px,0)}
-7.5%{transform:translate(36px,0)}20%{transform:translate(92px,0)}
-27.5%{transform:translate(92px,0)}40%{transform:translate(220px,0)}
-47.5%{transform:translate(220px,0)}60%{transform:translate(348px,0)}
-67.5%{transform:translate(348px,0)}80%{transform:translate(404px,0)}
-87.5%{transform:translate(404px,0)}89.5%{transform:translate(406px,0);animation-timing-function:ease-in}
+3%{transform:translateX(36px)}3.8%{transform:translate(36px,-3px)}4.6%{transform:translateX(36px)}
+7.5%{transform:translateX(36px)}20%{transform:translateX(92px)}
+27.5%{transform:translateX(92px)}40%{transform:translateX(220px)}
+47.5%{transform:translateX(220px)}60%{transform:translateX(348px)}
+67.5%{transform:translateX(348px)}80%{transform:translateX(404px)}
+87.5%{transform:translateX(404px)}89.5%{transform:translateX(406px);animation-timing-function:ease-in}
 93%{transform:translate(416px,30px);opacity:1}93.5%,100%{transform:translate(416px,30px);opacity:0}}
 .lab,.tap{opacity:0;animation:lab 20s step-end infinite}
 .tap{animation-name:tap}
-@keyframes lab{0%,62.1%{opacity:0}62.2%,99.9%{opacity:1}}
+@keyframes lab{0%,61.8%{opacity:0}61.9%,99.9%{opacity:1}}
 @keyframes tap{0%,83.4%{opacity:0}83.5%,99.9%{opacity:1}}
+.sq{transform-box:fill-box;transform-origin:50% 100%;animation:sq 20s infinite}
+@keyframes sq{0%,61.85%{transform:none}61.9%,62.6%{transform:scale(1.07,.93)}63.6%,100%{transform:none}}
 .bt{animation:bt 4s infinite}.b128{animation-name:bu}
 @keyframes bt{0%,37.5%{transform:translateX(0)}100%{transform:translateX(56px)}}
 @keyframes bu{0%,37.5%{transform:translateX(0)}100%{transform:translateX(128px)}}
@@ -365,11 +398,24 @@ css = """
 .gr{animation:gr 4s infinite}
 @keyframes gr{0%,37.5%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 .pr{animation:pr 4s infinite}
-@keyframes pr{0%,6%{transform:translateY(0);animation-timing-function:ease-in}
-11%,16%{transform:translateY(8px);animation-timing-function:ease-out}30%,100%{transform:translateY(0)}}
-.pl{animation:pl 1.6s steps(1) infinite}.pl.b{animation-delay:-.5s}.pl.c{animation-delay:-1.1s}
+@keyframes pr{0%{transform:translateY(-4px)}5%{transform:translateY(-8px);animation-timing-function:cubic-bezier(.7,0,1,1)}
+9.5%,14%{transform:translateY(6px);animation-timing-function:ease-out}15.5%{transform:translateY(5px)}32%,100%{transform:translateY(-4px)}}
+.pk{animation:pk 4s infinite}
+@keyframes pk{0%,9.4%,14%,100%{transform:none}9.5%{transform:translateY(-1px)}11%{transform:translateY(1px)}}
+.fl{opacity:0;animation:fl 4s steps(1) infinite}@keyframes fl{9.5%{opacity:1}11.5%{opacity:0}}
+.spa,.spb{opacity:0;animation:sp 4s linear infinite}.spb{animation-name:sp2}
+@keyframes sp{0%,9.4%{opacity:0;transform:none}9.5%{opacity:1;transform:none}
+13%{opacity:1;transform:translate(-9px,-3px)}18%{opacity:0;transform:translate(-16px,4px)}100%{opacity:0}}
+@keyframes sp2{0%,9.9%{opacity:0;transform:none}10%{opacity:1;transform:translateX(-1px)}
+14%{opacity:1;transform:translate(-13px,-6px)}21%{opacity:0;transform:translate(-22px,3px)}100%{opacity:0}}
+.pl{animation:pl 2s steps(1) infinite}.pl.b{animation-delay:-.5s}.pl.c{animation-delay:-1.25s}
 @keyframes pl{50%{opacity:.25}}
 .pw{animation:pw 4s steps(1) infinite}@keyframes pw{0%,30%{opacity:1}31%{opacity:.2}}
+.ld{animation:pl 1s steps(1) infinite}.d1{animation-duration:2.5s}.d2{animation-duration:.5s;animation-delay:-.25s}.d3{animation-duration:4s;animation-delay:-1s}
+.wo{animation:wo 5s steps(1) infinite}@keyframes wo{0%{opacity:1}44%{opacity:0}}
+.wa{animation:wa .2s steps(1) infinite}@keyframes wa{50%{opacity:.35}}
+.wf{animation:wf .5s linear infinite}.f1{animation-delay:-.2s}.f2{animation-delay:-.35s}
+@keyframes wf{0%{transform:translate(0,0);opacity:1}100%{transform:translate(-3px,30px);opacity:0}}
 .lv{animation:lv 4s infinite}
 @keyframes lv{0%{transform:rotate(-35deg)}4%{transform:rotate(30deg)}30%,100%{transform:rotate(-35deg)}}
 .arL{animation:arL 4s infinite}@keyframes arL{0%{transform:translateY(-3px)}6%,100%{transform:translateY(0)}}
@@ -379,35 +425,39 @@ css = """
 .arS{animation:arS 4s infinite}@keyframes arS{0%,4%,32%,100%{transform:none}8%,28%{transform:translateY(-2px)}}
 .bm{animation:bm 4s steps(1) infinite}
 @keyframes bm{0%,10%{opacity:0}11%,30%{opacity:1}31%,100%{opacity:0}}
-.lk{animation:lk 4s infinite}@keyframes lk{0%,4%,30%,100%{transform:none}8%,26%{transform:translate(-2px,1px)}}
-.ey{transform-box:fill-box;transform-origin:center;animation:bl 4.3s infinite step-end}
-.e1{animation-duration:5.1s}.e3{animation-duration:6.3s;animation-delay:-2s}.e4{animation-duration:3.7s}
-.lk{animation:lk 4s infinite,bl 5.7s infinite step-end}
+.ey{transform-box:fill-box;transform-origin:center;animation:bl 4s infinite step-end}
+.e1{animation-duration:5s}.e3{animation-duration:20s;animation-name:bl3}.e4{animation-duration:2.5s}
+.lk{animation:lk 4s infinite,bl 5s infinite step-end -2s}
+@keyframes lk{0%,4%,30%,100%{transform:none}8%,26%{transform:translate(-2px,1px)}}
 @keyframes bl{0%,93%{transform:scaleY(1)}94%{transform:scaleY(.2)}97%{transform:scaleY(1)}}
-.an{animation:an 2.4s steps(1) infinite}@keyframes an{60%{opacity:.3}}
-.la{animation:pl 1.2s steps(1) infinite}.lb{animation:pl 1.2s steps(1) infinite -.6s}
+@keyframes bl3{0%,30%,33%,63%,66%,100%{transform:scaleY(1)}31%,64%{transform:scaleY(.2)}}
+.an{animation:an 2.5s steps(1) infinite}@keyframes an{60%{opacity:.3}}
+.la{animation:pl 1.25s steps(1) infinite}.lb{animation:pl 1.25s steps(1) infinite -.625s}
 .bob{animation:bob 2s steps(1) infinite}@keyframes bob{50%{transform:translateY(1px)}}
-.wk{animation:wk 46s linear infinite}@keyframes wk{from{transform:translateX(-30px)}to{transform:translateX(500px)}}
-.wk2{animation:wk2 64s linear infinite -20s}
+.wk{animation:wk 20s linear infinite}@keyframes wk{from{transform:translateX(-30px)}to{transform:translateX(500px)}}
+.wk2{animation:wk2 20s linear infinite -7s}
 @keyframes wk2{from{transform:translateX(510px) scaleX(-1)}to{transform:translateX(-40px) scaleX(-1)}}
-.wb{animation:bob .5s steps(1) infinite}
-.la1{animation:la1 .5s steps(1) infinite}.la2{animation:la1 .5s steps(1) infinite -.25s}
+.wb{animation:bob .4s steps(1) infinite}
+.la1{animation:la1 .4s steps(1) infinite}.la2{animation:la1 .4s steps(1) infinite -.2s}
 @keyframes la1{50%{opacity:0}}
-.cld{animation:cld 70s linear infinite}@keyframes cld{to{transform:translateX(60px)}}
+.cld{animation:cld 20s linear infinite}@keyframes cld{to{transform:translateX(60px)}}
 .smk{animation:smk 5s linear infinite}.s1{animation-delay:-2.5s}
 @keyframes smk{0%{transform:translate(0,0) scale(1);opacity:.8}100%{transform:translate(6px,-14px) scale(2.4);opacity:0}}
 .smk,.stm{transform-box:fill-box;transform-origin:center}
-.stm{animation:stm 3.6s ease-out infinite}.t1{animation-delay:-1.2s}.t2{animation-delay:-2.4s}
+.stm{animation:stm 4s ease-out infinite}.t1{animation-delay:-1.333s}.t2{animation-delay:-2.667s}
 @keyframes stm{0%{transform:translate(0,0) scale(.6);opacity:.7}100%{transform:translate(-4px,-20px) scale(2.6);opacity:0}}
-.lc{animation:lc 7s steps(1) infinite}@keyframes lc{0%,100%{opacity:.05}41%{opacity:.035}43%{opacity:.055}}
-.mh{transform-origin:240.5px 112.5px;animation:rot 60s steps(60) infinite}
-.hh{transform-origin:240.5px 112.5px;animation:rot 720s linear infinite}
+.mh{transform-origin:240.5px 112.5px;animation:rot 20s steps(20) infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
-.rl{animation:rl 11s linear infinite}@keyframes rl{to{transform:translateY(360px)}}
-.sg{animation:sg 9s steps(1) infinite}@keyframes sg{0%,100%{opacity:1}61%{opacity:.55}62%{opacity:1}64%{opacity:.6}65%{opacity:1}}
+.hk{animation:hk 20s infinite}
+@keyframes hk{0%,8%{transform:translateX(44px)}30%,62%{transform:translateX(-8px)}88%,100%{transform:translateX(44px)}}
+.hs{transform-origin:0 -20px;animation:hs 10s infinite}
+@keyframes hs{0%,100%{transform:rotate(1.6deg)}50%{transform:rotate(-1.6deg)}}
+.ch{transform-origin:1px 0;animation:hs 5s infinite}
+.rl{animation:rl 10s linear infinite}@keyframes rl{to{transform:translateY(360px)}}
 @media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}
 """
-css = ' '.join(l.strip() for l in css.strip().splitlines())
+css = ''.join(l.strip() for l in css.strip().splitlines())
+css = re.sub(r'\s*([{}:;,])\s*', r'\1', css).replace(';}', '}')
 
 svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
        f"shape-rendering='crispEdges'><style>{css}</style><defs>{''.join(defs)}</defs>"
@@ -415,19 +465,20 @@ svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAs
 
 
 def enc(s):
-    return s.replace('%', '%25').replace('#', '%23').replace('<', '%3C').replace('>', '%3E').replace('"', "'")
+    # < and > are legal inside a quoted CSS url("data:..."); only % and # need escaping
+    return s.replace('%', '%25').replace('#', '%23').replace('"', "'")
 
 
 # re-encode: the scene already uses %23 for url refs; undo double-encoding for those
 svg_raw = svg.replace('%23', '#')
-data_uri = 'data:image/svg+xml,' + enc(svg_raw)
-
 open(sys.argv[1] + '/factory.svg', 'w').write(svg_raw)
 
 # ---------- small composer mascot (sits on top of composer, follows text end) ----------
-def mascot(typing):
+def mascot():
+    """Sprite sheet: idle robot at x 0, typing robot (amber face, fast arms) at x 17."""
     head = robot_head('ey')
-    body = robot_body('ty' if typing else 'id')
+    lit = head.replace("fill='%s' d='M6 8h1v2h-1z" % G[13], "fill='#ffb547' d='M6 8h1v2h-1z").replace(
+        "fill='%s' d='M6 -2" % G[13], "fill='#ffb547' d='M6 -2")
     st = ("*{animation-timing-function:ease-in-out}"
           ".ey{transform-box:fill-box;transform-origin:center;animation:bl 3.9s infinite step-end}"
           "@keyframes bl{0%,93%{transform:scaleY(1)}94%{transform:scaleY(.2)}97%{transform:scaleY(1)}}"
@@ -436,12 +487,11 @@ def mascot(typing):
           ".bo{animation:bo 2.2s steps(1) infinite}@keyframes bo{50%{transform:translateY(1px)}}"
           ".ty{animation:ty .28s steps(1) infinite}@keyframes ty{50%{transform:translateY(-2px)}}"
           "@media (prefers-reduced-motion:reduce){*{animation:none!important}}")
-    return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -3 17 27' shape-rendering='crispEdges'>"
-            f"<style>{st}</style><g class='bo'>{body}{head}</g></svg>").replace('%23', '#')
+    return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -3 34 27' shape-rendering='crispEdges'>"
+            f"<style>{st}</style><g class='bo'>{robot_body('id')}{head}</g>"
+            f"<g transform='translate(17 0)'><g class='bo'>{robot_body('ty')}{lit}</g></g></svg>").replace('%23', '#')
 
-
-m_idle = 'data:image/svg+xml,' + enc(mascot(False))
-m_type = 'data:image/svg+xml,' + enc(mascot(True))
+m_sheet = 'data:image/svg+xml,' + enc(mascot())
 
 # ---------- theme css ----------
 SCAN = "repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)"
@@ -451,7 +501,7 @@ BAND = ("linear-gradient(90deg,transparent calc(50% - 560px),rgba(12,13,14,.38) 
         "rgba(12,13,14,.38) calc(50% + 360px),transparent calc(50% + 560px))")
 WK = ",".join(f'[data-timeline-row-kind="{k}"]>*' for k in ("work","work-live","work-toggle","thinking","working"))
 theme_css = f"""
-[data-workspace-area="conversation"]{{background:{SCAN},{VIG},{BAND},{DIM},url("{data_uri}") center bottom/cover no-repeat #25272a!important}}
+[data-workspace-area="conversation"]{{background:@@BG@@ center bottom/cover no-repeat #25272a!important}}
 [data-workspace-area="conversation"] .messages-timeline-scroll,[data-workspace-area="conversation"]>div,[data-chat-header]{{background:transparent!important}}
 [data-workspace-area="conversation"] *,[data-workspace-area="conversation"] *::before,[data-workspace-area="conversation"] *::after{{backdrop-filter:none!important}}
 [data-chat-header]{{border-bottom:2px solid #0c0d0e!important;background:linear-gradient(#1c1e20,#1c1e20cc)!important}}
@@ -469,8 +519,8 @@ theme_css = f"""
 [data-slot="composer-host"]:focus-within{{box-shadow:0 -2px #dcdddb,0 2px #dcdddb,-2px 0 #dcdddb,2px 0 #dcdddb,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-shell"]::before{{display:none!important}}
 [data-slot="composer-host"] .composer-tiptap,[data-slot="composer-host"] .composer-tiptap>*{{position:static!important}}
-[data-slot="composer-host"] .composer-tiptap>:last-child::after{{content:"";position:absolute;top:-50px;width:34px;height:54px;margin-left:2px;pointer-events:none;z-index:5;image-rendering:pixelated;background:url("{m_idle}") 0 0/34px 54px no-repeat}}
-[data-slot="composer-host"]:focus-within .composer-tiptap>:last-child::after{{background-image:url("{m_type}")}}
+[data-slot="composer-host"] .composer-tiptap>:last-child::after{{content:"";position:absolute;top:-50px;width:34px;height:54px;margin-left:2px;pointer-events:none;z-index:5;image-rendering:pixelated;background:url("{m_sheet}") 0 0/68px 54px no-repeat}}
+[data-slot="composer-host"]:focus-within .composer-tiptap>:last-child::after{{background-position:-34px 0}}
 [data-slot="button"],[data-slot="input"],[data-slot="select-trigger"],[data-slot="dialog-popup"],[data-slot="popover-popup"],[data-slot="menu-popup"],[data-slot="tooltip-popup"],[data-thread-details-card]{{border-radius:0!important}}
 [data-slot="dialog-popup"],[data-slot="popover-popup"],[data-slot="menu-popup"]{{box-shadow:0 0 0 2px #5c5f63,6px 6px 0 rgba(0,0,0,.5)!important}}
 [data-slot="tooltip-popup"]{{background:#0c0d0e!important;color:#f0f0ec!important;box-shadow:0 0 0 1px #888b8e!important}}
@@ -483,6 +533,10 @@ svg.lucide{{stroke-linecap:square;stroke-linejoin:miter}}
 [data-slot="scroll-area-thumb"]{{background:#5c5f63!important;border-radius:0!important}}
 """
 theme_css = ''.join(l.strip() for l in theme_css.strip().splitlines())
+import fx
+# The scene comes from the rendered animated WebP beside the theme file (var(--theme-background-image)),
+# which already carries its own vignette, scanlines and shading; keep only the chat band on top.
+theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(globals())
 
 colors = {
     "canvas": "#1c1e20", "chrome": "#141517", "toolbar": "#1c1e20", "toolbarForeground": "#dcdddb",
@@ -504,7 +558,10 @@ colors = {
     "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#f0f0ec",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
-theme = {"id": "agent-works", "version": 1, "name": "Agent Works", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
+TID = 'agent-works-hd'
+assert len(theme_css) <= 50000, f'css is {len(theme_css)} chars, over the 50,000 limit'
+theme = {"id": TID, "version": 1, "name": "Agent Works HD", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
          "colors": colors, "css": theme_css}
-json.dump(theme, open(sys.argv[1] + '/agent-works.json', 'w'))
-print('css chars:', len(theme_css), 'svg uri:', len(data_uri))
+json.dump(theme, open(f'{sys.argv[1]}/{TID}.json', 'w'))
+open(f'{sys.argv[1]}/lights.svg', 'w').write(fx.overlay(globals()))
+print(f'{TID}: css {len(theme_css)} / 50000')

@@ -1,0 +1,1 @@
+{"name":"agent-works-render","private":true,"type":"module","scripts":{"render":"./render.sh"},"dependencies":{"puppeteer-core":"^23.11.1"}}
