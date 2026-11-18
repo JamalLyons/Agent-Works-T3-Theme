@@ -1,0 +1,97 @@
+# Agent notes: how the Agent Works theme is built
+
+These are the facts that took real digging to find. Read this before you change the theme so you don't have to rediscover any of it. The README covers features and install; this file covers the code and the T3 Code internals it depends on.
+
+Verified against T3 Code (Beta) **0.1.10** on macOS, 2026-11. If the app updates, recheck anything in "T3 Code internals" before relying on it.
+
+## Pipeline at a glance
+
+```
+gen.py ──► out/factory.svg ──► render/render.sh ──► media/agent-works.webp ─┐
+   │                             (Brave + puppeteer,                        │
+   │                              render/page.mjs + render/fx.js)           │
+   ├─► out/agent-works.json  (colors + CSS; CSS includes fx.py output) ─────┤
+   └─► out/lights.svg        (the "agent working" overlay, for preview.sh)  │
+                                                                            ▼
+                         install.sh ──► ~/.t3/userdata/themes/agent-works.{json,webp}
+```
+
+- `python3 gen.py out` takes about a second. It writes `out/agent-works.json`, `out/factory.svg` and `out/lights.svg`. It asserts that the CSS is at most 50,000 characters and prints the count, currently about 13.7K.
+- `render/render.sh [scale=3] [quality=85]` takes about 6.5 minutes. Run it only when the scene changes in `gen.py`. It writes `media/agent-works.webp` (1440×960, 300 frames, 15 fps, 20 s loop, about 4.6 MB) and `media/agent-works-poster.png`. It runs `npm i` inside `render/` on its first run.
+- `render/preview.sh` takes about 30 seconds. It reuses `render/build/frames/` from the last render, composites `out/lights.svg` over them and writes `media/preview.gif`: 10 s idle, then the lights flicker on.
+- `./install.sh` builds the theme JSON, removes `id` from it (the file name supplies the ID), and copies the JSON and WebP into `~/.t3/userdata/themes/`. Override the folder with `T3_THEMES_DIR`.
+
+**Tools:** Brave at `/Applications/Brave Browser.app` (override with the `BRAVE` env var), plus `img2webp`, `ffmpeg` and Node, all from Homebrew. Python uses only the standard library.
+
+## Files
+
+| File | Role |
+|---|---|
+| `gen.py` | Single script, top to bottom. Builds the 480×320 pixel scene as an SVG with CSS keyframes inside it, the composer mascot sprite sheet, the UI CSS and the color roles, then calls `fx.css(globals())` and writes the theme. |
+| `fx.py` | The reactive layer: everything that responds to app state. `overlay(ns)` builds the amber light SVG, and `css(ns)` returns the CSS. It reads the scene constants from `gen.py`'s globals (`g`, `text`, `R`, `enc`, `BX0`, `BX1`, `DY`, `sx`, `SY`). |
+| `render/page.mjs` | Builds `render/build/page.html`: three inline copies of the SVG (base, bloom, reflection), canvas layers, and a threshold filter for bloom. |
+| `render/fx.js` | Draws the canvas effects: shading and ambient occlusion, a calm center band, light shafts, dust motes, backlit steam and CRT structure. Every effect is a pure function of `t` and periodic over 20 s. |
+| `render/capture.mjs` | Seeks every animation to time `t` (`document.getAnimations()` → pause, set `currentTime`) and calls `AW_drawFx(t)`, then screenshots each frame. Passing a 4th argument such as `0,1.5,12.4` captures single test frames to `t<sec>.png`. |
+| `render/preview.mjs` + `preview.sh` | Builds the README GIF. |
+| `install.sh` | Publishes the theme into T3 Code's themes folder. |
+
+## Scene coordinates and conventions (gen.py)
+
+- **Scene space:** 480×320 units. Floor line `FY = 282`.
+- **Line layer:** stations, belt, boxes and workers are drawn in an older 180-tall coordinate system and shifted down by `DY = 150` through the `LT` group.
+- **Box rest positions:** `S = (36, 92, 220, 348, 404)`, for the chute, the inspector, transit, the press and the tape station.
+- **Chat column:** it covers about x 133–347, so keep that band calm. Stations sit to the sides, and only a fast belt span crosses the middle.
+- **Helpers:**
+  - `g(rects)` merges `(color, x, y, w, h)` rects into one path per color.
+  - `sprite(rows, pal)` turns an ASCII map into rects.
+  - `text()` uses the 3×5 pixel `FONT`.
+- **Loop:** every animation period must divide **20 s** (the box cycle), or the WebP jumps when it loops. The station clock is 4 s; the belt pauses from 0% to 37.5% and moves 64 px from 37.5% to 100%.
+- **Fixed anchors that the overlay in `fx.py` depends on.** If you move one of these, update `fx.py`:
+
+| Anchor | Coordinates |
+|---|---|
+| Lamps | x 100 and 382. Bulb y 177, cone starts at y 178. |
+| Sign | panel x 214–264, y 56–66. Text origin `sx = 218`, `SY + 3 = 59`. |
+| Belt | `BX0 = 22`, `BX1 = 420`. Skirt LED row at y 118 in line space, which is y 268 in scene space. |
+| Press LEDs | (341, 187), (346, 187), (351, 187). Control panel LEDs at (8, 221) and (12, 221). |
+| Press contact | x 338–358, y 248. The hit lands at 0.38 s of each 4 s cycle. |
+
+- **Foreground layer** (`FG`, x 0–120 pipe, chain at x 72–78, crane hook near x 456–508). It uses class `fg`. `page.mjs` blurs it slightly and leaves it out of the bloom and reflection copies.
+
+## How the reactive layer works (fx.py)
+
+- **Agent working:** `[data-workspace-area="conversation"]:has([data-timeline-row-kind="working"],[data-timeline-row-kind="work-live"])`. T3 renders a `working` row (id `working-indicator-row`) while a turn runs, and `work-live` for the active tool group. Both go away when the turn ends.
+- **Lights-on layer:** a `::before` pseudo-element on the conversation area.
+  - Its background is `lights.svg` as a `data:` URI, sized `center bottom / cover` with the same `viewBox` as the scene and `preserveAspectRatio='xMidYMax slice'`. That's why it lines up pixel for pixel with the WebP at any window size. Keep the two sizing rules identical.
+  - It uses `mix-blend-mode: screen` and `z-index: -1` on top of `isolation: isolate`, so it sits above the background and below the messages.
+- **`::after`** is a dimming vignette for the idle state. It fades out while work is happening.
+- **The composer reacts to app-wide state** through `body:has(...)`. The composer isn't inside the conversation area, so a `[conversation]:has(...) [composer]` selector never matches.
+- **Mascot:** one sprite sheet, 34×27 units with two 17-wide poses: idle gray, and typing with an amber face and fast arms. It's applied to `.composer-tiptap>:last-child::after`, and `:focus-within` switches between the poses with `background-position`.
+- **Streaming cursor:** `[data-streaming="true"]>:last-child::after`. `data-streaming` is set on the markdown wrapper of the reply that's currently streaming.
+- **Colors** are only grays plus amber: `#ffb547`, `#ff9a2e` and `#ffe2a8`.
+- **Reduced motion:** add any new animation to the `prefers-reduced-motion` rule.
+
+## T3 Code internals this theme relies on
+
+All of this came from reading the app bundle, `/Applications/T3 Code (Beta).app/Contents/Resources/app.asar`. To look again, extract it with `npx @electron/asar extract <asar> /tmp/t3asar/out`. The client is in `apps/server/dist/client/assets/`, and the server is in `apps/server/dist/*.mjs`.
+
+- **The CSS limit is hardcoded:** `THEME_CSS_MAX_LENGTH = 5e4`, checked by the schema. It can't be raised through configuration.
+- **CSS restrictions:** no `@import`, no `image-set()`, no `src()`. `url()` only works with `data:` or `#id`, and backslashes are rejected on the client. `<` and `>` are fine inside a quoted `url("data:…")`, which is why `enc()` escapes only `%`, `#` and `"`.
+- **Background image:** `<themesDir>/<themeId>.{webp,png,jpg,jpeg}`, up to 16 MB, no symlinks. The client fetches it and sets `--theme-background-image: url("blob:…")` on `<html>`. Animated WebP plays. It's looked up **by theme ID, only for themes that come from the themes folder**.
+- **Where installed themes live, and which wins:**
+  - **Themes folder ("environment" themes):** `~/.t3/userdata/themes/<id>.json`. The server scans this folder, and the file name sets the ID; IDs `system`, `light`, `dark` and the built-ins are reserved. These show in Settings → Appearance **without** edit or remove buttons, and they're the only kind that gets a background image. **This is how Agent Works is installed.**
+  - **Add theme (user library):** stored in browser localStorage under `t3code:themes:v1` in `~/Library/Application Support/t3code-v2/Local Storage`. These cards have edit, export and remove buttons, but **never get a background image**, so the WebP scene doesn't load for them.
+  - **Lookup order:** built-ins first, then the user library, then the themes folder. A user-library theme with the same ID **hides** the folder theme. If the scene looks stale or missing, check Settings → Appearance for a removable card with the same name and remove it.
+- **Which theme is active:** `~/.t3/userdata/settings.json`, key `defaultTheme`. Agents can set it with the `t3_theme_set` tool (`themeId: "agent-works"`). `t3_theme_read` lists folder themes along with `hasBackground`.
+- **Stable selectors:** the in-app guide lists them, and `t3_theme_read` returns it. Other class names change between releases. This theme also uses these attributes, which the guide doesn't list:
+  - `data-timeline-row-kind` values `working`, `work-live`, `thinking`, `work-toggle`
+  - `data-streaming`
+  - `data-slot="composer-shell"`
+  - `.composer-tiptap`
+
+## Checking changes in the live app
+
+- `t3_theme_set` reloads the theme. If a change doesn't show up, switch to `t3-chat` and back to `agent-works`.
+- **Screenshots:** `screencapture -x` works. The display is Retina: screenshot pixels are 2.25× the click coordinates, which are in points. To click, post `CGEvent` mouse events from a small Swift helper; AppleScript `click at` doesn't reach the app.
+- The web build at `http://127.0.0.1:3773` needs a pairing token, so check in the desktop app instead.
+- **Check the reactive layer while a turn is running.** Your own turn counts: the lamps, sign and belt chase should be lit in any screenshot taken during it.

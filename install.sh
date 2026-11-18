@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Installs Agent Works HD into T3 Code: the theme JSON plus its animated background.
+# Installs Agent Works into T3 Code: the theme JSON plus its animated background.
 # Usage: ./install.sh            (themes dir defaults to ~/.t3/userdata/themes)
 #        T3_THEMES_DIR=/path ./install.sh
 set -euo pipefail
 cd "$(dirname "$0")"
 DIR=${T3_THEMES_DIR:-$HOME/.t3/userdata/themes}
-ID=agent-works-hd
+ID=agent-works
 [ -f media/agent-works.webp ] || { echo "media/agent-works.webp missing; run render/render.sh" >&2; exit 1; }
 mkdir -p out "$DIR"
 python3 gen.py out >/dev/null
@@ -14,4 +14,4 @@ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); d.pop("id",None); j
   "out/$ID.json" "$DIR/$ID.json"
 cp media/agent-works.webp "$DIR/$ID.webp"
 echo "Installed to $DIR/$ID.{json,webp}"
-echo "In T3 Code: Settings > Appearance > Agent Works HD"
+echo "In T3 Code: Settings > Appearance > Agent Works"

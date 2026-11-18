@@ -558,9 +558,9 @@ colors = {
     "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#f0f0ec",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
-TID = 'agent-works-hd'
+TID = 'agent-works'
 assert len(theme_css) <= 50000, f'css is {len(theme_css)} chars, over the 50,000 limit'
-theme = {"id": TID, "version": 1, "name": "Agent Works HD", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
+theme = {"id": TID, "version": 1, "name": "Agent Works", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
          "colors": colors, "css": theme_css}
 json.dump(theme, open(f'{sys.argv[1]}/{TID}.json', 'w'))
 open(f'{sys.argv[1]}/lights.svg', 'w').write(fx.overlay(globals()))

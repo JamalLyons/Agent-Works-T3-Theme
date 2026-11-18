@@ -1,8 +1,8 @@
-# Agent Works HD — a T3 Code theme
+# Agent Works — a T3 Code theme
 
 An animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3code). Little TV-headed agent robots run a box assembly line in the grays of a '90s black-and-white CRT. When your agent starts working, the factory lights come on.
 
-![Agent Works HD preview: idle, then the lights come on](media/preview.gif)
+![Agent Works preview: idle, then the lights come on](media/preview.gif)
 
 ## What's in the scene
 
@@ -24,11 +24,11 @@ An animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3code)
 ./install.sh
 ```
 
-Then in T3 Code, open **Settings → Appearance** and select **Agent Works HD**.
+Then in T3 Code, open **Settings → Appearance** and select **Agent Works**.
 
 The script builds the theme and copies two files into `~/.t3/userdata/themes`:
-- `agent-works-hd.json`, the theme itself
-- `agent-works-hd.webp`, the animated background
+- `agent-works.json`, the theme itself
+- `agent-works.webp`, the animated background
 
 To use a different themes folder, set `T3_THEMES_DIR`. Run the script again after any change.
 
@@ -43,7 +43,7 @@ T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image f
 
 | File | What it does |
 |---|---|
-| `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works-hd.json`, `out/factory.svg` and `out/lights.svg`. |
+| `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works.json`, `out/factory.svg` and `out/lights.svg`. |
 | `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row and composer effects, and the streaming cursor. |
 | `render/render.sh` | Renders `out/factory.svg` in headless Brave with bloom, light shafts, dust and depth. It captures 300 frames and encodes `media/agent-works.webp`. Takes about 6.5 minutes and needs Brave, `img2webp` and Node. |
 | `render/preview.sh` | Builds `media/preview.gif` from the rendered frames plus the light overlay. Needs `ffmpeg`. |
@@ -60,3 +60,7 @@ render/preview.sh     # optional: refresh the README GIF
 **Rules for scene changes:**
 - Everything in the scene must loop evenly in 20 seconds, so the WebP has no visible jump.
 - Keep the middle of the wall (x 133 to 347 in scene units) calm, because the chat column covers it.
+
+**Installing:** install through `./install.sh`, not **Add theme**. T3 only loads a background image for themes in its themes folder. A copy added with **Add theme** has no background and hides the folder copy, so if one exists, remove it in Settings → Appearance.
+
+**Notes for agents:** [AGENTS.md](AGENTS.md) explains the build pipeline, the scene coordinates and the T3 Code internals this theme depends on.
