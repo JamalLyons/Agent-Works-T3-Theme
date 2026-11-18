@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
-"""Generates the 'Agent Works' pixel factory theme for T3 Code."""
-import json, re, sys, urllib.parse
+"""Generates the 'Agent Works' pixel factory theme for T3 Code.
+
+Usage: python3 gen.py OUT_DIR [--no-id]
+
+Importing this module builds everything in memory and writes nothing; tests import it.
+`main()` writes OUT_DIR/{agent-works.json, factory.svg, lights.svg, anchors.json}.
+--no-id leaves "id" out of the theme JSON (themes-folder installs take the id from the file name).
+"""
+import json, os, re, sys
+import fx
 
 # ---------- palette: old B&W CRT grays ----------
 G = ['#0c0d0e', '#141517', '#1c1e20', '#25272a', '#2f3235', '#3b3e42',
@@ -493,7 +501,6 @@ def enc(s):
 
 # re-encode: the scene already uses %23 for url refs; undo double-encoding for those
 svg_raw = svg.replace('%23', '#')
-open(sys.argv[1] + '/factory.svg', 'w').write(svg_raw)
 
 # ---------- small composer mascot (sits on top of composer, follows text end) ----------
 def mascot():
@@ -555,10 +562,9 @@ svg.lucide{{stroke-linecap:square;stroke-linejoin:miter}}
 [data-slot="scroll-area-thumb"]{{background:#5c5f63!important;border-radius:0!important}}
 """
 theme_css = ''.join(l.strip() for l in theme_css.strip().splitlines())
-import fx
 # The scene comes from the rendered animated WebP beside the theme file (var(--theme-background-image)),
 # which already carries its own vignette, scanlines and shading; keep only the chat band on top.
-theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(globals())
+theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(ANCHORS, g, text, R, enc)
 
 colors = {
     "canvas": "#1c1e20", "chrome": "#141517", "toolbar": "#1c1e20", "toolbarForeground": "#dcdddb",
@@ -581,16 +587,43 @@ colors = {
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
 TID = 'agent-works'
-assert len(theme_css) <= 50000, f'css is {len(theme_css)} chars, over the 50,000 limit'
+CSS_MAX = 50000   # THEME_CSS_MAX_LENGTH in T3 Code; not configurable
 theme = {"id": TID, "version": 1, "name": "Agent Works", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
          "colors": colors, "css": theme_css}
-json.dump(theme, open(f'{sys.argv[1]}/{TID}.json', 'w'))
-open(f'{sys.argv[1]}/lights.svg', 'w').write(fx.overlay(globals()))
-json.dump(ANCHORS, open(f'{sys.argv[1]}/anchors.json', 'w'), indent=1)
+lights_svg = fx.overlay(ANCHORS, g, text, R)
 
-# every LED the overlay lights must sit exactly on an LED the scene draws
-_scene_svg = svg_raw
-for _x, _y in re.findall(r"class='ld[^']*'><path fill='[^']+' d='M(\d+) (\d+)h2v2", fx.overlay(globals())):
-    _x, _y = int(_x), int(_y)
-    assert (_x, _y) in PRESS_LEDS + PANEL_LEDS, f'overlay LED at ({_x},{_y}) has no scene LED under it'
-print(f'{TID}: css {len(theme_css)} / 50000')
+
+def check():
+    """Invariants the build must hold. Raises AssertionError; main() and the tests both run it."""
+    assert len(theme_css) <= CSS_MAX, f'css is {len(theme_css)} chars, over the {CSS_MAX} limit'
+    # every LED the overlay lights must sit exactly on an LED the scene draws
+    for x, y in overlay_leds():
+        assert (x, y) in PRESS_LEDS + PANEL_LEDS, f'overlay LED at ({x},{y}) has no scene LED under it'
+
+
+def overlay_leds():
+    """Every 2x2 LED rect the overlay draws inside an `ld` group."""
+    return [(int(x), int(y)) for grp in re.findall(r"<g class='ld[^']*'>(.*?)</g>", lights_svg)
+            for x, y in re.findall(r'M(\d+) (\d+)h2v2h-2z', grp)]
+
+
+def main(argv):
+    args = [a for a in argv if not a.startswith('-')]
+    if len(args) != 1 or set(argv) - set(args) - {'--no-id'}:
+        sys.exit('usage: gen.py OUT_DIR [--no-id]')
+    out = args[0]
+    check()
+    os.makedirs(out, exist_ok=True)
+    body = {k: v for k, v in theme.items() if k != 'id'} if '--no-id' in argv else theme
+    with open(f'{out}/{TID}.json', 'w') as f:
+        json.dump(body, f)
+    for name, text_ in (('factory.svg', svg_raw), ('lights.svg', lights_svg)):
+        with open(f'{out}/{name}', 'w') as f:
+            f.write(text_)
+    with open(f'{out}/anchors.json', 'w') as f:
+        json.dump(ANCHORS, f, indent=1)
+    print(f'{TID}: css {len(theme_css)} / {CSS_MAX}')
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

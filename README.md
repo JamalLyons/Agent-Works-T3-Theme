@@ -52,6 +52,7 @@ T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image f
 |---|---|
 | `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. |
 | `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row and composer effects, and the streaming cursor. |
+| `tests/` | Quick checks of the build (CSS limit, light alignment, 20-second loop). Run with `python3 -m unittest discover -s tests`. |
 | `render/render.sh` | Renders `out/factory.svg` in headless Brave with bloom, light shafts, dust and depth. It captures 300 frames and encodes `media/agent-works.webp`. Takes about 6.5 minutes and needs Brave, `img2webp` and Node. |
 | `render/preview.sh` | Builds `media/preview.gif` from the rendered frames plus the light overlay. Needs `ffmpeg`. |
 | `install.sh` | Builds the theme and copies the JSON and WebP into T3 Code's themes folder. If a copy is already installed, it asks before replacing it. |
@@ -60,6 +61,7 @@ T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image f
 **Rebuild steps:**
 
 ```sh
+python3 -m unittest discover -s tests   # under a second
 render/render.sh      # only after scene changes in gen.py
 render/preview.sh     # optional: refresh the README GIF
 ./install.sh -y

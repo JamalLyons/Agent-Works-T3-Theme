@@ -17,7 +17,8 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
                          install.sh ──► ~/.t3/userdata/themes/agent-works.{json,webp}
 ```
 
-- `python3 gen.py out` takes about a second. It writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. It asserts that the CSS is at most 50,000 characters (and prints the count, currently about 13.7K), that every overlay LED sits on a scene LED, and that the press and weld keyframes still match the timing in `ANCHORS`.
+- `python3 gen.py out` takes about a second and creates `out/` if needed. It writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. It asserts that the CSS is at most 50,000 characters (and prints the count, currently about 13.7K), that every overlay LED sits on a scene LED, and that the press and weld keyframes still match the timing in `ANCHORS`. `--no-id` leaves `id` out of the JSON, which is what `install.sh` uses.
+- `python3 -m unittest discover -s tests` takes well under a second. It imports `gen` (importing builds the theme in memory and writes nothing) and checks the CSS limit and restrictions, LED and lamp alignment, that every scene animation period divides the 20 s loop, and the CLI outputs. Run it after any change to `gen.py` or `fx.py`.
 - `render/render.sh [scale=3] [quality=85]` takes about 6.5 minutes. Run it only when the scene changes in `gen.py`. It writes `media/agent-works.webp` (1440×960, 300 frames, 15 fps, 20 s loop, about 4.6 MB) and `media/agent-works-poster.png`. It runs `npm i` inside `render/` on its first run.
 - `render/preview.sh` takes about 30 seconds. It reuses `render/build/frames/` from the last render, composites `out/lights.svg` over them and writes `media/preview.gif`: 10 s idle, then the lights flicker on.
 - `./install.sh [-y]` builds the theme JSON, removes `id` from it (the file name supplies the ID), and copies the JSON and WebP into `~/.t3/userdata/themes/`. Override the folder with `T3_THEMES_DIR`.
@@ -28,12 +29,13 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 
 | File | Role |
 |---|---|
-| `gen.py` | Single script, top to bottom. Builds the 480×320 pixel scene as an SVG with CSS keyframes inside it, the composer mascot sprite sheet, the UI CSS and the color roles, then calls `fx.css(globals())` and writes the theme. |
-| `fx.py` | The reactive layer: everything that responds to app state. `overlay(ns)` builds the amber light SVG, and `css(ns)` returns the CSS. It takes the drawing helpers (`g`, `text`, `R`, `enc`) from `gen.py`'s globals and every position from `ANCHORS`. |
+| `gen.py` | Builds, top to bottom at import time, the 480×320 pixel scene as an SVG with CSS keyframes inside it, `ANCHORS`, the composer mascot sprite sheet, the UI CSS (adding `fx.css(...)`) and the color roles. `check()` holds the build invariants; `main()` (only when run as a script) writes the files. |
+| `fx.py` | The reactive layer: everything that responds to app state. `overlay(an, g, text, R)` builds the amber light SVG, and `css(an, g, text, R, enc)` returns the CSS. `an` is `gen.ANCHORS`, the only source of positions; the rest are `gen.py`'s pixel helpers. |
 | `render/page.mjs` | Builds `render/build/page.html`: three inline copies of the SVG (base, bloom, reflection), canvas layers, and a threshold filter for bloom. |
 | `render/fx.js` | Draws the canvas effects: shading and ambient occlusion, a calm center band, light shafts, dust motes, backlit steam and CRT structure. Every effect is a pure function of `t` and periodic over 20 s. |
 | `render/capture.mjs` | Seeks every animation to time `t` (`document.getAnimations()` → pause, set `currentTime`) and calls `AW_drawFx(t)`, then screenshots each frame. Passing a 4th argument such as `0,1.5,12.4` captures single test frames to `t<sec>.png`. |
 | `render/preview.mjs` + `preview.sh` | Builds the README GIF. |
+| `tests/test_theme.py` | Standard-library `unittest` checks of the build invariants and the `gen.py` CLI. |
 | `install.sh` / `uninstall.sh` | Install or update the theme in T3 Code's themes folder, or remove it. Both ask before changing an existing install. `-y` skips the question. Without `-y`, a non-interactive run (no terminal) exits without changing anything. `uninstall.sh` deletes only `agent-works.{json,webp,png,jpg,jpeg}` and never follows symlinks. |
 
 ## Scene coordinates and conventions (gen.py)

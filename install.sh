@@ -19,11 +19,10 @@ if [ -e "$DIR/$ID.json" ] || [ -e "$DIR/$ID.webp" ]; then
   fi
 fi
 
-mkdir -p out "$DIR"
-python3 gen.py out >/dev/null
-# T3 takes the theme id from the file name, so drop it from the JSON body.
-python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); d.pop("id",None); json.dump(d,open(sys.argv[2],"w"))' \
-  "out/$ID.json" "$DIR/$ID.json"
+mkdir -p "$DIR"
+# T3 takes the theme id from the file name, so --no-id leaves it out of the JSON body.
+python3 gen.py out --no-id >/dev/null
+cp "out/$ID.json" "$DIR/$ID.json"
 cp media/agent-works.webp "$DIR/$ID.webp"
 echo "Installed $DIR/$ID.json and $DIR/$ID.webp"
 echo "In T3 Code: Settings > Appearance > Agent Works"

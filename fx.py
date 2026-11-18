@@ -1,6 +1,6 @@
 """Reactive layer for Agent Works: everything that responds to app state.
 
-gen.py calls css(globals()) after it builds the scene. The overlay SVG uses the
+gen.py calls overlay() and css() with its ANCHORS and pixel helpers after it builds the scene. The overlay SVG uses the
 same viewBox and `center bottom / cover` sizing as the scene, so its pixels line
 up with the scene's pixels at any window size without measuring anything.
 """
@@ -14,10 +14,11 @@ LIVE = '[data-timeline-row-kind="working"],[data-timeline-row-kind="work-live"]'
 ON = f'{CONV}:has({LIVE})'
 
 
-def overlay(ns):
-    """Lights-on layer: lamp cones and pools, lit sign, chase lights, LEDs."""
-    g, text, R = ns['g'], ns['text'], ns['R']
-    an = ns['ANCHORS']
+def overlay(an, g, text, R):
+    """Lights-on layer: lamp cones and pools, lit sign, chase lights, LEDs.
+
+    an: gen.ANCHORS (all positions). g, text, R: gen.py's pixel helpers.
+    """
     BX0, BX1 = an['belt']['x0'], an['belt']['x1']
     sx, SY = an['sign']['x'], an['sign']['y']
     by = an['bulbY']
@@ -54,10 +55,10 @@ def overlay(ns):
             f"shape-rendering='crispEdges'><style>{st}</style><defs>{defs}</defs>{s}</svg>")
 
 
-def css(ns):
-    enc = ns['enc']
-    over = 'data:image/svg+xml,' + enc(overlay(ns))
-    
+def css(an, g, text, R, enc):
+    """Reactive CSS. enc: gen.enc, the data: URI escaper."""
+    over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R))
+
     rm = '@media (prefers-reduced-motion:reduce)'
     out = f"""
 {CONV}{{position:relative;isolation:isolate;animation:aw-on .7s cubic-bezier(.2,.7,.2,1) both}}
