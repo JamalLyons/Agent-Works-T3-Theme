@@ -21,7 +21,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 - `python3 -m unittest discover -s tests` takes well under a second. It imports `gen` (importing builds the theme in memory and writes nothing) and checks the CSS limit and restrictions, LED and lamp alignment, that every scene animation period divides the 20 s loop, and the CLI outputs. Run it after any change to `gen.py` or `fx.py`.
 - `render/render.sh [scale=3] [quality=85]` takes about 6.5 minutes. Run it only when the scene changes in `gen.py`. It writes `media/agent-works.webp` (1440×960, 300 frames, 15 fps, 20 s loop, about 4.6 MB) and `media/agent-works-poster.png`. It runs `npm i` inside `render/` on its first run.
 - `render/preview.sh` takes about 30 seconds. It reuses `render/build/frames/` from the last render, composites `out/lights.svg` over them and writes `media/preview.gif`: 10 s idle, then the lights flicker on.
-- `./install.sh [-y]` builds the theme JSON, removes `id` from it (the file name supplies the ID), and copies the JSON and WebP into `~/.t3/userdata/themes/`. Override the folder with `T3_THEMES_DIR`.
+- `./install.sh [-y]` builds the theme JSON with `gen.py out --no-id` (the file name supplies the ID) and copies the JSON and WebP into `~/.t3/userdata/themes/`. Override the folder with `T3_THEMES_DIR`.
 
 **Tools:** Brave at `/Applications/Brave Browser.app` (override with the `BRAVE` env var), plus `img2webp`, `ffmpeg` and Node, all from Homebrew. Python uses only the standard library.
 
@@ -49,7 +49,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
   - `sprite(rows, pal)` turns an ASCII map into rects.
   - `text()` uses the 3×5 pixel `FONT`.
 - **Loop:** every animation period must divide **20 s** (the box cycle), or the WebP jumps when it loops. The station clock is 4 s; the belt pauses from 0% to 37.5% and moves 64 px from 37.5% to 100%.
-- **Scene anchors (`ANCHORS` in `gen.py`).** This is the one source of positions for `fx.py` (the overlay) and `render/fx.js` (the canvas effects, through `out/anchors.json` → `window.AW_ANCHORS`). Each anchor is derived from the variable that draws it, so moving a station moves its lights too. Never retype a coordinate in `fx.py` or `fx.js`; add it to `ANCHORS` instead. Current values:
+- **Scene anchors (`ANCHORS` in `gen.py`).** This is the one source of positions for `fx.py` (the overlay) and `render/fx.js` (the canvas effects, through `out/anchors.json` → `window.AW_ANCHORS`). Each anchor comes from the same variable that draws it (`LAMPS`, `BULB_Y`, `WINS`, `WELD`, `PRESS_LEDS`, ...), so moving a station moves its lights too. Never retype a coordinate in `fx.py` or `fx.js`; add it to `ANCHORS` instead. Current values:
 
 | Anchor | Key | Value |
 |---|---|---|

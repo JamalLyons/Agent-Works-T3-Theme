@@ -143,6 +143,7 @@ defs.append("<pattern id='cl' width='60' height='30' patternUnits='userSpaceOnUs
             f"<path fill='{G[11]}' d='M6 6h10v1h3v2H3V7h3zM34 15h8v1h3v2H30v-2h4zM48 3h6v1h2v1h-9V4h1z'/>"
             f"<path fill='{G[9]}' d='M3 9h16v1H3zM30 18h15v1H30z'/></pattern>")
 WINS = ((142, 96), (296, 96))
+assert len({wy for _, wy in WINS}) == 1, 'render/fx.js assumes every window has the same glass y'
 GLASS_Y = (20 + WINS[0][1] - 17, 46 + WINS[0][1] - 17)   # glass top/bottom in scene space (99, 125)
 for wx, wy in WINS:
     o = wy - 17
@@ -208,9 +209,10 @@ pipes = [(G[5], 0, 196, 30, 4), (G[7], 0, 196, 30, 1), (G[3], 0, 199, 30, 1), (G
          (K, 470, 196, 9, 9), (G[11], 471, 197, 7, 7), (K, 474, 199, 1, 3)]
 parts.append(g(pipes))
 parts.append(''.join(g([(A1, x, 239, 2, 2)], cls=f'ld d{i}') for i, x in enumerate((5, 9, 13, 17))))
-# welding torch on the left wall pipe (arc at 14,160; sparks fall to the 196 pipe)
+# welding torch on the left wall pipe (arc centre WELD; sparks fall to the 196 pipe)
+WELD = (14, 160)
 parts.append(g([(K, 15, 158, 7, 2), (G[5], 21, 157, 3, 4), (G[6], 8, 162, 8, 2)]))
-parts.append("<g class='wo'>" + g([(G[13], 13, 159, 2, 2), (A1, 12, 158, 1, 1), (A1, 15, 161, 1, 1)], cls='wa') +
+parts.append("<g class='wo'>" + g([(G[13], WELD[0] - 1, WELD[1] - 1, 2, 2), (A1, WELD[0] - 2, WELD[1] - 2, 1, 1), (A1, WELD[0] + 1, WELD[1] + 1, 1, 1)], cls='wa') +
              ''.join(g([(A1, x, 161, 1, 1), (G[13], x + 2, 163, 1, 1)], cls=f'wf f{i}') for i, x in enumerate((11, 14, 16))) + '</g>')
 PANEL_LEDS = [(8, 221), (12, 221)]
 parts.append(g([(A1, 8, 221, 2, 2)], cls='pl a') + g([(G[11], 12, 221, 2, 2)], cls='pl c') +
@@ -222,10 +224,11 @@ parts.append(g([(K, 446, 120, 34, 3), (G[6], 447, 120, 33, 1), (K, 450, 123, 2, 
                box_sprite(452, 106) + [(K, 470, 110, 8, 10), (G[7], 471, 111, 6, 8)]))
 
 # hanging lamps above the side stations + light cones
-LAMPS = (100, 382)   # cord x; the unlit bulb is the 3x1 rect at (lx-1, 177)
+LAMPS = (100, 382)   # cord x; the unlit bulb is the 3x1 rect at (lx-1, BULB_Y)
+BULB_Y = 177
 for lx in LAMPS:
     parts.append(g([(K, lx, 6, 1, 166), (K, lx - 4, 172, 9, 5), (G[6], lx - 3, 172, 7, 1), (G[4], lx - 3, 173, 7, 3),
-                    (AD, lx - 1, 177, 3, 1)]))
+                    (AD, lx - 1, BULB_Y, 3, 1)]))
 
 # ---------- line layer (old coords, shifted down by DY) ----------
 PX = S[3] + 8 - 160          # press x offset from the old 160-centered drawing
@@ -480,13 +483,13 @@ assert f'{PRESS_HIT_PCT:g}%,14%{{transform:translateY(6px)' in css, 'press hit k
 assert f'.wo{{animation:wo {WELD_PERIOD}s' in css and f'{WELD_OFF_PCT}%{{opacity:0}}' in css, 'weld keyframe moved'
 ANCHORS = {
     'loop': 20, 'floorY': FY,
-    'lamps': list(LAMPS), 'bulbY': 177,
+    'lamps': list(LAMPS), 'bulbY': BULB_Y,
     'windows': [wx for wx, _ in WINS], 'glassY': list(GLASS_Y),
     'sign': {'x': sx, 'y': SY},
     'belt': {'x0': BX0, 'x1': BX1, 'skirtY': 119 + DY},
     'pressLeds': PRESS_LEDS, 'panelLeds': PANEL_LEDS,
     'pressHit': {'x': 160 + PX, 'y': 97 + DY, 't': round(PRESS_HIT_PCT / 100 * PRESS_PERIOD, 4), 'period': PRESS_PERIOD},
-    'weld': {'x': 14, 'y': 160, 'on': round(WELD_OFF_PCT / 100 * WELD_PERIOD, 4), 'period': WELD_PERIOD},
+    'weld': {'x': WELD[0], 'y': WELD[1], 'on': round(WELD_OFF_PCT / 100 * WELD_PERIOD, 4), 'period': WELD_PERIOD},
 }
 
 svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
@@ -609,7 +612,7 @@ def overlay_leds():
 
 def main(argv):
     args = [a for a in argv if not a.startswith('-')]
-    if len(args) != 1 or set(argv) - set(args) - {'--no-id'}:
+    if len(args) != 1 or set(argv) - set(args) - {'--no-id'}:   # a folder named like a flag needs ./-out
         sys.exit('usage: gen.py OUT_DIR [--no-id]')
     out = args[0]
     check()

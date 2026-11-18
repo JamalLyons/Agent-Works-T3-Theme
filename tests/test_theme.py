@@ -12,6 +12,7 @@ def durations(css):
     (and each comma-separated item in it) plus every `animation-duration:`."""
     out = []
     for decl in re.findall(r'animation:([^;}]+)', css):
+        decl = re.sub(r'\([^)]*\)', '', decl)   # drop cubic-bezier(...)/steps(...) args before splitting on commas
         for item in decl.split(','):
             m = re.search(r'(\d*\.?\d+)s\b', item)
             if m:
@@ -29,7 +30,8 @@ class Build(unittest.TestCase):
         self.assertNotIn('@import', css)
         self.assertNotIn('image-set(', css)
         self.assertNotIn('\\', css)
-        rest = re.sub(r'url\("data:[^"]*"\)', '', css)   # data: URIs are allowed whole
+        # data: URIs are allowed whole, in any quoting
+        rest = re.sub(r'url\(\s*(["\'])data:.*?\1\s*\)|url\(\s*data:[^)]*\)', '', css)
         for u in re.findall(r'url\(\s*["\']?([^"\')]*)', rest):
             self.assertTrue(u.startswith('#'), f'url({u}) is not data: or #id')
 
@@ -55,9 +57,19 @@ class Build(unittest.TestCase):
         self.assertEqual(bad, [], f'periods that do not divide {loop}s make the WebP jump at the loop')
 
     def test_anchor_timing_matches_keyframes(self):
-        an = gen.ANCHORS
-        self.assertAlmostEqual(an['pressHit']['t'], 0.38)
-        self.assertAlmostEqual(an['weld']['on'], 2.2)
+        # the anchor time must be the keyframe percentage of the period the scene CSS really uses
+        css = re.search(r'<style>(.*?)</style>', gen.svg_raw).group(1)
+        for name, an, pct in (('pr', gen.ANCHORS['pressHit'], gen.PRESS_HIT_PCT), ('wo', gen.ANCHORS['weld'], gen.WELD_OFF_PCT)):
+            period = float(re.search(rf'\.{name}{{animation:{name} (\d*\.?\d+)s', css).group(1))
+            self.assertEqual(an['period'], period, name)
+            self.assertAlmostEqual(an['t' if name == 'pr' else 'on'], pct / 100 * period, msg=name)
+
+    def test_weld_anchor_is_on_the_arc(self):
+        x, y = gen.ANCHORS['weld']['x'], gen.ANCHORS['weld']['y']
+        self.assertIn(f"<g class='wa'><path fill='{gen.G[13]}' d='M{x - 1} {y - 1}h2v2", gen.svg_raw)
+
+    def test_durations_parser_handles_timing_functions(self):
+        self.assertEqual(durations('.a{animation:x cubic-bezier(.2,.7,.2,1) 4s infinite,y 2s}'), ['4', '2'])
 
 
 def load(path):
