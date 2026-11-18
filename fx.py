@@ -47,9 +47,9 @@ def overlay(an, g, text, R):
     (p0, p1), (q0, q1, q2) = an['panelLeds'], an['pressLeds']
     s += g([(A, *p0, 2, 2)], cls='ld') + g([(A1, *p1, 2, 2)], cls='ld d')
     s += g([(A, *q0, 2, 2), (A2, *q1, 2, 2), (A1, *q2, 2, 2)], cls='ld d')
-    st = (".ch{animation:k .6s linear infinite}@keyframes k{to{stroke-dashoffset:-16}}"
+    st = (".ch{animation:k .625s linear infinite}@keyframes k{to{stroke-dashoffset:-16}}"
           ".ld{animation:l .8s steps(1) infinite}.d{animation-delay:-.4s}@keyframes l{50%{opacity:.2}}"
-          ".sg{animation:sg 6s steps(1) infinite}@keyframes sg{0%,100%{opacity:1}71%{opacity:.4}72%{opacity:1}}"
+          ".sg{animation:sg 5s steps(1) infinite}@keyframes sg{0%,100%{opacity:1}71%{opacity:.4}72%{opacity:1}}"
           "@media (prefers-reduced-motion:reduce){*{animation:none!important}}")
     return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
             f"shape-rendering='crispEdges'><style>{st}</style><defs>{defs}</defs>{s}</svg>")

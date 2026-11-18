@@ -56,6 +56,14 @@ class Build(unittest.TestCase):
         bad = [d for d in ds if (loop / Fraction(d)).denominator != 1]
         self.assertEqual(bad, [], f'periods that do not divide {loop}s make the WebP jump at the loop')
 
+    def test_overlay_animations_divide_the_loop(self):
+        loop = Fraction(gen.ANCHORS['loop'])
+        css = re.search(r'<style>(.*?)</style>', gen.lights_svg).group(1)
+        ds = durations(css)
+        self.assertGreaterEqual(len(ds), 3)
+        bad = [d for d in ds if (loop / Fraction(d)).denominator != 1]
+        self.assertEqual(bad, [], f'periods that do not divide {loop}s make preview.gif jump at the loop')
+
     def test_anchor_timing_matches_keyframes(self):
         # the anchor time must be the keyframe percentage of the period the scene CSS really uses
         css = re.search(r'<style>(.*?)</style>', gen.svg_raw).group(1)
