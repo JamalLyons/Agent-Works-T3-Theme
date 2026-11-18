@@ -64,6 +64,21 @@ def overlay(an, g, text, R):
             f"shape-rendering='crispEdges'><style>{st}</style><defs>{defs}</defs>{s}</svg>")
 
 
+def zzz(an, g, text):
+    """Sleep overlay: a Z, then a bigger Z, drifting up from each dozing robot. Same viewBox and sizing as the scene."""
+    s = ''
+    for i, (x, y) in enumerate(an['sleepers']):
+        for j, (dx, dy, sc) in enumerate(((0, 0, 1), (4, -7, 1), (8, -16, 2))):
+            # each Z rises and fades over 5 s; the three are staggered a third of that apart, sleepers offset 1 s
+            z = g([(c, x2, y2, w, h) for c, x2, y2, w, h in text('Z', 0, 0, '#c1c3c3')])
+            s += (f"<g transform='translate({x + dx} {y + dy - 5 * sc}) scale({sc})'>"
+                  f"<g class='z' style='animation-delay:-{(j * 5 / 3 + i) % 5:.2f}s'>{z}</g></g>")
+    st = (".z{opacity:0;animation:z 5s linear infinite}"
+          "@keyframes z{0%{opacity:0;transform:translate(0,2px)}20%{opacity:.85}70%{opacity:.6}100%{opacity:0;transform:translate(2px,-5px)}}"
+          "@media (prefers-reduced-motion:reduce){.z{animation:none;opacity:.6}}")
+    return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
+            f"shape-rendering='crispEdges'><style>{st}</style>{s}</svg>")
+
 SEL = 'rgba(220,221,219,.1)'   # selection: neutral steel, readable on any monogram color
 SEL_SH = 'inset 0 0 0 1px rgba(220,221,219,.14),0 0 14px rgba(0,0,0,.35)'
 WAIT = '[data-approval-detail],[data-pending-user-input-toggle]'   # approval or question pending: the line is on hold
@@ -122,7 +137,8 @@ background:repeating-linear-gradient(90deg,{A2} 0 6px,transparent 6px 16px) 0 0/
 {CARD} [data-pull-request-action-pending="true"] [data-slot="button"]{{color:{A}!important;box-shadow:0 0 0 1px {A1},0 0 12px rgba(255,154,46,.4)!important;animation:aw-lamp 1.2s steps(1) infinite}}
 {PANEL}{{position:relative;isolation:isolate;border-left:2px solid #0c0d0e!important;box-shadow:inset 2px 0 #3a3d40!important}}
 {PANEL}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(rgba(17,18,20,.86),rgba(17,18,20,.93)),var(--theme-background-image) center bottom/cover no-repeat fixed}}
+background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(rgba(17,18,20,.86),rgba(17,18,20,.93)),var(--aw-sleep) center bottom/cover no-repeat fixed}}
+{busy(f'{PANEL}::before')}{{background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(rgba(17,18,20,.86),rgba(17,18,20,.93)),var(--theme-background-image)}}
 {PANEL}::after{{content:"";position:absolute;top:-16px;bottom:0;left:0;width:2px;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
 background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px)}}
 {busy(f'{PANEL}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail .8s linear 1.1s infinite}}
@@ -136,8 +152,26 @@ border-bottom:2px solid #0c0d0e!important;box-shadow:0 1px #3a3d40!important}}
 """
     return ''.join(l.strip() for l in out.strip().splitlines())
 
-def css(an, g, text, R, enc):
-    """Reactive CSS. enc: gen.enc, the data: URI escaper."""
+def sleep_css(an, g, text, enc, sleep_uri):
+    """Idle state: the still sleep frame (plus Zzz) covers the live WebP until an agent works anywhere.
+
+    The image lives once in --aw-sleep on :root. The chat shows it on {CONV}::after (the idle layer, which fades
+    out when work starts, over the flickering lamps); the sidebar and right panel swap it in for the live scene
+    in their darkened ::before stacks. All use the live scene's fixed, window-sized `center bottom / cover`, so
+    the frame lines up with the WebP pixel for pixel. The WebP keeps playing underneath, so on waking the line
+    is already moving.
+    """
+    z = 'data:image/svg+xml,' + enc(zzz(an, g, text))
+    out = f"""
+:root{{--aw-sleep:url("{sleep_uri}")}}
+{CONV}::after{{opacity:1;image-rendering:pixelated;transition:opacity 1.6s ease .4s;
+background:radial-gradient(ellipse 70% 60% at 50% 40%,transparent,rgba(0,0,0,.25)),url("{z}") center bottom/cover no-repeat fixed,var(--aw-sleep) center bottom/cover no-repeat fixed}}
+{SB}::before,{PANEL}::before{{image-rendering:pixelated}}
+"""
+    return ''.join(l.strip() for l in out.strip().splitlines())
+
+def css(an, g, text, R, enc, sleep_uri):
+    """Reactive CSS. enc: gen.enc, the data: URI escaper. sleep_uri: the idle frame as a data: URI."""
     over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R))
 
     rm = '@media (prefers-reduced-motion:reduce)'
@@ -152,10 +186,9 @@ def css(an, g, text, R, enc):
 45%{{clip-path:inset(0 0 0 0);filter:brightness(1.8)}}100%{{clip-path:inset(0 0 0 0);filter:none}}}}
 {CONV}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;mix-blend-mode:screen;opacity:0;
 background:url("{over}") center bottom/cover no-repeat fixed;transition:opacity 1.2s ease}}
-{CONV}::after{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.35;transition:opacity 1.2s ease;
-background:radial-gradient(ellipse 70% 60% at 50% 40%,transparent,rgba(0,0,0,.6))}}
+{CONV}::after{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}}
 {ON}::before{{opacity:1;animation:aw-flick 1.1s steps(1) both}}
-{ON}::after{{opacity:0}}
+{busy(f'{CONV}::after')}{{opacity:0;transition-delay:.3s}}
 @keyframes aw-flick{{0%{{opacity:0}}6%{{opacity:.9}}10%{{opacity:.1}}16%{{opacity:1}}22%{{opacity:.3}}30%,100%{{opacity:1}}}}
 {','.join(f'[data-timeline-row-kind="{k}"]>*' for k in ('work-live', 'working'))}{{position:relative;
 box-shadow:0 -2px {A1},0 2px {A1},-2px 0 {A1},2px 0 {A1},0 0 18px rgba(255,154,46,.28),4px 4px 0 2px rgba(0,0,0,.4)!important}}
@@ -171,7 +204,8 @@ background-size:300% 2px!important;background-repeat:no-repeat!important;backgro
 body:has({LIVE}) [data-slot="composer-host"]{{box-shadow:0 -2px {A1},0 2px {A1},-2px 0 {A1},2px 0 {A1},0 0 22px rgba(255,154,46,.22),5px 5px 0 2px rgba(0,0,0,.5)!important}}
 {SB}{{position:relative;isolation:isolate}}
 {SB}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-background:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--theme-background-image) center bottom/cover no-repeat fixed}}
+background:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--aw-sleep) center bottom/cover no-repeat fixed}}
+{busy(f'{SB}::before')}{{background-image:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--theme-background-image)}}
 {SB}{{overflow:hidden}}
 {SB}::after{{content:"";position:absolute;top:-16px;bottom:0;right:0;width:48px;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
 background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) right 0 top 0/2px 16px repeat-y,linear-gradient(270deg,rgba(255,154,46,.2),transparent)}}
@@ -186,7 +220,9 @@ background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) rig
 {busy(f'{SB} [data-slot="project-monogram"]')}{{outline:1px solid rgba(255,181,71,.7);outline-offset:1px}}
 {WAIT_CSS}
 {details_css()}
+{sleep_css(an, g, text, enc, sleep_uri)}
 {rm}{{{SB}::after,{PANEL}::after,{CARD}::before,{CARD} [data-pull-request-action-pending] [data-slot=button],[data-testid="sidebar-working-shelf-toggle"]::before,{HOLD_ANIM}{{animation:none!important}}{ROW}{{transition:none!important}}}}
+{rm}{{{CONV}::after{{transition:none!important}}}}
 {rm}{{{CONV},{CONV}::before,[data-slot="composer-host"],[data-timeline-row-kind]>*::after,[data-streaming]>*::after{{animation:none!important}}}}
 """
     return ''.join(l.strip() for l in out.strip().splitlines())

@@ -85,6 +85,34 @@ class Build(unittest.TestCase):
         self.assertLessEqual(x + cw + 3, 446, 'credit plate must clear the crane chain')
         self.assertIn(''.join(gen.R(*r[1:]) for r in gen.text(gen.CREDIT, x, y, '')[:3]), gen.svg_raw)
 
+    def test_sleep_frame_embedded_once_and_small(self):
+        css = gen.theme_css
+        self.assertEqual(css.count('data:image/webp;base64,'), 1, 'sleep frame must live once, in --aw-sleep')
+        self.assertLess(len(gen.sleep_uri), 20000, 'sleep frame eats the CSS budget; re-encode it smaller')
+        # every place that shows the live scene must also show the sleep frame while idle
+        self.assertEqual(css.count('var(--theme-background-image) center bottom/cover'), 2, 'chat + settings only')
+        self.assertGreaterEqual(css.count('var(--aw-sleep)'), 3)
+
+    def test_sleepers_are_robot_heads(self):
+        # each Zzz origin is the top-right corner of a worker's (sunken) head
+        heads = [(gen.CX + 30, gen.S[1] + 22, gen.S[4] - 20)]
+        for x, y in gen.ANCHORS['sleepers']:
+            self.assertIn(x - 15, heads[0])
+            self.assertEqual(y, 87 + gen.DY + 5)
+        self.assertGreaterEqual(len(gen.ANCHORS['sleepers']), 2)
+
+    def test_sleep_scene_freezes_the_line(self):
+        self.assertIn('animation-play-state:paused!important', gen.svg_sleep)
+        self.assertNotIn('.se{opacity:1', gen.svg, 'live scene must keep its eyes open')
+        self.assertIn('.se{opacity:1', gen.svg_sleep)
+
+    def test_zzz_animations_divide_the_loop(self):
+        loop = Fraction(gen.ANCHORS['loop'])
+        css = re.search(r'<style>(.*?)</style>', gen.fx.zzz(gen.ANCHORS, gen.g, gen.text)).group(1)
+        ds = durations(css)
+        self.assertTrue(ds)
+        self.assertEqual([d for d in ds if (loop / Fraction(d)).denominator != 1], [])
+
     def test_durations_parser_handles_timing_functions(self):
         self.assertEqual(durations('.a{animation:x cubic-bezier(.2,.7,.2,1) 4s infinite,y 2s}'), ['4', '2'])
 
@@ -103,7 +131,7 @@ class Cli(unittest.TestCase):
 
     def test_writes_all_outputs(self):
         out = self.run_gen()
-        self.assertEqual(sorted(os.listdir(out)), ['agent-works.json', 'anchors.json', 'factory.svg', 'lights.svg'])
+        self.assertEqual(sorted(os.listdir(out)), ['agent-works.json', 'anchors.json', 'factory.svg', 'lights.svg', 'sleep.svg'])
         self.assertEqual(load(f'{out}/agent-works.json')['id'], 'agent-works')
         self.assertEqual(load(f'{out}/anchors.json'), json.loads(json.dumps(gen.ANCHORS)))
 

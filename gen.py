@@ -7,7 +7,7 @@ Importing this module builds everything in memory and writes nothing; tests impo
 `main()` writes OUT_DIR/{agent-works.json, factory.svg, lights.svg, anchors.json}.
 --no-id leaves "id" out of the theme JSON (themes-folder installs take the id from the file name).
 """
-import json, os, re, sys
+import base64, json, os, re, sys
 import fx
 
 # ---------- palette: old B&W CRT grays ----------
@@ -64,6 +64,7 @@ FONT = {
     'J': ['001', '001', '001', '101', '010'], 'M': ['10001', '11011', '10101', '10001', '10001'],
     'L': ['100', '100', '100', '100', '111'], 'Y': ['101', '101', '010', '010', '010'],
     'C': ['011', '100', '100', '100', '011'], '.': ['000', '000', '000', '000', '010'],
+    'Z': ['111', '001', '010', '100', '111'],
 }
 
 
@@ -96,8 +97,9 @@ def robot_head(eye_cls='ey'):
     ]
     s = g(r)
     s += g([(G[13], 6, 8, 1, 2), (G[13], 9, 8, 1, 2)], cls=eye_cls)
+    s += g([(G[10], 5, 9, 2, 1), (G[10], 9, 9, 2, 1)], cls='se')   # closed eyes, shown only in the sleep frame
     s += g([(G[13], 6, -2, 3, 2)], cls='an')
-    return s
+    return f"<g class='hd'>{s}</g>"
 
 
 def robot_body(arm_cls=None, legs=False):
@@ -460,6 +462,7 @@ css = """
 @keyframes bm{0%,10%{opacity:0}11%,30%{opacity:1}31%,100%{opacity:0}}
 .ey{transform-box:fill-box;transform-origin:center;animation:bl 4s infinite step-end}
 .e1{animation-duration:5s}.e3{animation-duration:20s;animation-name:bl3}.e4{animation-duration:2.5s}
+.se{opacity:0}
 .lk{animation:lk 4s infinite,bl 5s infinite step-end -2s}
 @keyframes lk{0%,4%,30%,100%{transform:none}8%,26%{transform:translate(-2px,1px)}}
 @keyframes bl{0%,93%{transform:scaleY(1)}94%{transform:scaleY(.2)}97%{transform:scaleY(1)}}
@@ -514,6 +517,30 @@ svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAs
        f"shape-rendering='crispEdges'><style>{css}</style><defs>{''.join(defs)}</defs>"
        f"<path fill='{G[3]}' d='M0 0h480v320H0z'/>{scene}</svg>")
 
+
+# ---------- sleep frame ----------
+# The idle state is one still frame of this same scene with the line shut down: workers slumped with eyes shut,
+# belt empty, press parked, every light off but one standby LED. render/sleep.sh renders it from svg_sleep;
+# fx.py stacks it over the live WebP while no agent works, with Zzz floating from the SLEEPERS.
+SLEEP_T = 0          # frame time: belt paused, press up, lever at rest
+WK2_X = 128          # the sweeper dozes left of the chat column, leaning on its broom
+sleep_css = (
+    '*{animation-play-state:paused!important}'
+    '.hd{transform:translateY(2px)!important}.ey{opacity:0!important}.se{opacity:1!important}.an{opacity:.25!important}'
+    '.arL,.arS,.arT,.bob,.wb,.lk{transform:none!important}.la,.lb{opacity:.2!important}.la2{opacity:0!important}.la1{opacity:1!important}'
+    '.bx,.bm,.fl,.spa,.spb,.wo,.stm,.rl,.wk,.ld{opacity:0!important}.ld.d0{opacity:.5!important}'
+    '.pl,.pw{opacity:.15!important}.pl.a{opacity:.7!important}'
+    '.pr{transform:translateY(-8px)!important}.pk,.lv{transform:none!important}.lv{transform:rotate(-35deg)!important}'
+    f'.wk2{{transform:translateX({WK2_X}px) scaleX(-1)!important}}'
+)
+svg_sleep = svg.replace('</style>', sleep_css + '</style>', 1)
+# top-right corner of each dozing robot's head, in scene space (heads sink 2 px); Zzz rise from here.
+# The inspector between them dozes too, without Zzz, so the snoring stays sparse.
+SLEEPERS = [(x + 15, 87 + DY + 3 + 2) for x in (CX + 30, S[4] - 20)]
+ANCHORS['sleepers'] = SLEEPERS
+SLEEP_WEBP = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'media', 'agent-works-sleep.webp')
+with open(SLEEP_WEBP, 'rb') as f:   # made by render/sleep.sh; committed so builds need no browser
+    sleep_uri = 'data:image/webp;base64,' + base64.b64encode(f.read()).decode()
 
 def enc(s):
     # < and > are legal inside a quoted CSS url("data:..."); only % and # need escaping
@@ -583,7 +610,7 @@ svg.lucide{{stroke-linecap:square;stroke-linejoin:miter}}
 theme_css = ''.join(l.strip() for l in theme_css.strip().splitlines())
 # The scene comes from the rendered animated WebP beside the theme file (var(--theme-background-image)),
 # which already carries its own vignette, scanlines and shading; keep only the chat band on top.
-theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(ANCHORS, g, text, R, enc)
+theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(ANCHORS, g, text, R, enc, sleep_uri)
 CREDIT_CSS = '/* Agent Works by Jamal Lyons | jamallyons.com | x.com/codingwithjamal */'
 theme_css = CREDIT_CSS + theme_css
 
@@ -638,7 +665,7 @@ def main(argv):
     body = {k: v for k, v in theme.items() if k != 'id'} if '--no-id' in argv else theme
     with open(f'{out}/{TID}.json', 'w') as f:
         json.dump(body, f)
-    for name, text_ in (('factory.svg', svg_raw), ('lights.svg', lights_svg)):
+    for name, text_ in (('factory.svg', svg_raw), ('lights.svg', lights_svg), ('sleep.svg', svg_sleep.replace('%23', '#'))):
         with open(f'{out}/{name}', 'w') as f:
             f.write(text_)
     with open(f'{out}/anchors.json', 'w') as f:

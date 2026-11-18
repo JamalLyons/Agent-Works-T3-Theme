@@ -1,7 +1,7 @@
 // Builds render/build/page.html from out/factory.svg + out/anchors.json + fx.js
 import fs from 'node:fs';
 import path from 'node:path';
-const [svgPath, outPath, scale = '3'] = process.argv.slice(2);
+const [svgPath, outPath, scale = '3', mode = ''] = process.argv.slice(2);   // mode 'sleep': idle frame, no flashes
 // scene anchors written by gen.py next to factory.svg; fx.js reads every position from here
 const anchors = fs.readFileSync(path.join(path.dirname(svgPath), 'anchors.json'), 'utf8');
 const FY = JSON.parse(anchors).floorY;
@@ -44,7 +44,7 @@ html,body{margin:0;background:#0c0d0e;overflow:hidden}
 <div id="glow"></div>
 <canvas id="crt"></canvas>
 </div>
-<script>window.AW_SCALE=${S};window.AW_ANCHORS=${anchors};</script>
+<script>window.AW_SCALE=${S};window.AW_SLEEP=${mode === 'sleep'};window.AW_ANCHORS=${anchors};</script>
 <script>${fs.readFileSync(new URL('./fx.js', import.meta.url), 'utf8')}</script>
 <script>window.AW_drawFx(0);</script></body></html>`;
 fs.writeFileSync(outPath, html);
