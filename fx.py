@@ -12,6 +12,15 @@ A2 = '#ffe2a8'    # hot filament
 CONV = '[data-workspace-area="conversation"]'
 LIVE = '[data-timeline-row-kind="working"],[data-timeline-row-kind="work-live"]'
 ON = f'{CONV}:has({LIVE})'
+SB = '[data-slot="sidebar-inner"]'
+ROW = '[data-sidebar-row]'
+CUR = f'{ROW}[aria-current="page"]'
+SHELF = '[data-testid="sidebar-working-header"]'      # the sidebar's "Working" shelf; present while any thread runs
+BUSY = (f'body:has({LIVE})', f'body:has({SHELF})')     # an agent is working somewhere
+
+def busy(sel):
+    """`sel` scoped to 'an agent is working', for both signals."""
+    return ','.join(f'{b} {sel}' for b in BUSY)
 
 
 def overlay(an, g, text, R):
@@ -60,6 +69,7 @@ def css(an, g, text, R, enc):
     over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R))
 
     rm = '@media (prefers-reduced-motion:reduce)'
+    SCAN_SB = 'repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)'
     out = f"""
 {CONV}{{position:relative;isolation:isolate;animation:aw-on .7s cubic-bezier(.2,.7,.2,1) both}}
 @keyframes aw-on{{0%{{clip-path:inset(50% 0 50% 0);filter:brightness(4) contrast(2)}}
@@ -84,6 +94,25 @@ background:{A};box-shadow:0 0 8px {A1};animation:aw-cur 1s steps(1) infinite}}
 background-size:300% 2px!important;background-repeat:no-repeat!important;background-position:120% 0;animation:aw-sweep .9s ease-out both}}
 @keyframes aw-sweep{{from{{background-position:120% 0}}to{{background-position:-20% 0}}}}
 body:has({LIVE}) [data-slot="composer-host"]{{box-shadow:0 -2px {A1},0 2px {A1},-2px 0 {A1},2px 0 {A1},0 0 22px rgba(255,154,46,.22),5px 5px 0 2px rgba(0,0,0,.5)!important}}
+{SB}{{position:relative;isolation:isolate}}
+{SB}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.9;filter:blur(1px) saturate(.8);
+background:{SCAN_SB},linear-gradient(rgba(20,21,23,.35),rgba(20,21,23,.55) 45%,rgba(20,21,23,.88) 85%),var(--theme-background-image) 18% 100%/auto 100% no-repeat}}
+{SB}::after{{content:"";position:absolute;top:0;bottom:0;right:0;width:48px;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.2s ease;
+background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) right 0 top 0/2px 16px repeat-y,linear-gradient(270deg,rgba(255,154,46,.2),transparent)}}
+{busy(f'{SB}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail .8s linear 1.1s infinite}}
+@keyframes aw-rail{{from{{background-position:right 0 top 0,0 0}}to{{background-position:right 0 top 16px,0 0}}}}
+[data-testid="sidebar-working-shelf-toggle"]{{color:{A}!important;text-shadow:0 0 6px rgba(255,154,46,.6)}}
+[data-testid="sidebar-working-shelf-toggle"]::before{{content:"";flex:none;width:6px;height:6px;background:{A2};box-shadow:0 0 0 1px {A1},0 0 8px {A};animation:aw-lamp 1.6s steps(1) infinite}}
+@keyframes aw-lamp{{50%{{opacity:.35}}}}
+{ROW}{{border-radius:0!important;transition:background .25s ease}}
+{ROW}:hover{{background:linear-gradient(90deg,rgba(255,181,71,.1),rgba(220,221,219,.04) 60%)!important}}
+{CUR}{{position:relative;background:linear-gradient(90deg,rgba(255,181,71,.17),rgba(255,154,46,.04) 70%,transparent)!important;box-shadow:inset 3px 0 {A1}!important}}
+{CUR}::before{{content:"";position:absolute;left:0;top:50%;width:3px;height:8px;margin-top:-4px;background:{A2};box-shadow:0 0 6px {A};pointer-events:none;animation:aw-cur 1.6s steps(1) infinite}}
+[data-slot="project-monogram"]{{filter:drop-shadow(1px 0 0 rgba(255,181,71,.45)) drop-shadow(-1px 0 0 rgba(255,181,71,.45)) drop-shadow(0 1px 0 rgba(255,181,71,.45)) drop-shadow(0 -1px 0 rgba(255,181,71,.45))}}
+{busy('[data-slot="project-monogram"]')}{{animation:aw-mono 2s steps(1) infinite}}
+@keyframes aw-mono{{0%,100%{{filter:drop-shadow(1px 0 0 {A}) drop-shadow(-1px 0 0 {A}) drop-shadow(0 1px 0 {A}) drop-shadow(0 -1px 0 {A}) drop-shadow(0 0 3px {A1})}}
+47%{{filter:drop-shadow(1px 0 0 {A1}) drop-shadow(-1px 0 0 {A1}) drop-shadow(0 1px 0 {A1}) drop-shadow(0 -1px 0 {A1})}}53%{{filter:drop-shadow(1px 0 0 {A2}) drop-shadow(-1px 0 0 {A2}) drop-shadow(0 1px 0 {A2}) drop-shadow(0 -1px 0 {A2}) drop-shadow(0 0 4px {A})}}}}
+{rm}{{{SB}::after,[data-testid="sidebar-working-shelf-toggle"]::before,{CUR}::before,[data-slot="project-monogram"]{{animation:none!important}}{ROW}{{transition:none!important}}}}
 {rm}{{{CONV},{CONV}::before,[data-slot="composer-host"],[data-timeline-row-kind]>*::after,[data-streaming]>*::after{{animation:none!important}}}}
 """
     return ''.join(l.strip() for l in out.strip().splitlines())

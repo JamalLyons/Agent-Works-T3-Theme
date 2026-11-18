@@ -544,8 +544,6 @@ theme_css = f"""
 .chat-markdown a{{color:#dcdddb!important;text-decoration:underline dotted!important}}
 [data-slot="sidebar-inner"]{{background:{SCAN},linear-gradient(#1c1e20,#141517)!important;border-right:2px solid #0c0d0e!important}}
 [data-thread-item]{{border-radius:0!important}}
-[data-thread-item]:hover{{background:rgba(220,221,219,.07)!important}}
-[data-thread-item][data-active=true],[data-thread-item][aria-current]{{box-shadow:inset 3px 0 #c1c3c3!important}}
 [data-slot="project-monogram"]{{image-rendering:pixelated;border-radius:0!important}}
 [data-slot="composer-host"]{{position:relative;overflow:visible!important;margin-top:44px!important;background:#141517!important;border-radius:0!important;border:0!important;box-shadow:0 -2px #888b8e,0 2px #888b8e,-2px 0 #888b8e,2px 0 #888b8e,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-host"]:focus-within{{box-shadow:0 -2px #dcdddb,0 2px #dcdddb,-2px 0 #dcdddb,2px 0 #dcdddb,5px 5px 0 2px rgba(0,0,0,.5)!important}}
@@ -584,8 +582,8 @@ colors = {
     "messageActionHover": "#dcdddb", "codeBackground": "#0c0d0e", "codeForeground": "#dcdddb",
     "searchMatchBackground": "#4a4d51", "searchMatchForeground": "#f0f0ec", "searchMatchActiveBackground": "#c1c3c3",
     "searchMatchActiveForeground": "#0c0d0e", "sidebar": "#17181a", "sidebarForeground": "#dcdddb",
-    "sidebarMutedForeground": "#888b8e", "sidebarControlSurface": "#25272a", "sidebarRowHover": "#25272a",
-    "sidebarRowActive": "#2f3235", "sidebarRowSelected": "#3b3e42", "sidebarBorder": "#0c0d0e",
+    "sidebarMutedForeground": "#888b8e", "sidebarControlSurface": "#25272a", "sidebarRowHover": "#2a2621",
+    "sidebarRowActive": "#33291d", "sidebarRowSelected": "#3d3022", "sidebarBorder": "#0c0d0e",
     "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#f0f0ec",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
