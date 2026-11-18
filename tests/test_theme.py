@@ -76,6 +76,15 @@ class Build(unittest.TestCase):
         x, y = gen.ANCHORS['weld']['x'], gen.ANCHORS['weld']['y']
         self.assertIn(f"<g class='wa'><path fill='{gen.G[13]}' d='M{x - 1} {y - 1}h2v2", gen.svg_raw)
 
+    def test_credit_in_scene_and_css(self):
+        self.assertTrue(gen.theme_css.startswith('/* Agent Works by Jamal Lyons'))
+        self.assertIn('jamallyons.com', gen.theme_css)
+        x, y = gen.CREDIT_XY
+        cw = gen.text_w(gen.CREDIT)
+        self.assertGreaterEqual(x, 347, 'credit plate must stay right of the chat column')
+        self.assertLessEqual(x + cw + 3, 446, 'credit plate must clear the crane chain')
+        self.assertIn(''.join(gen.R(*r[1:]) for r in gen.text(gen.CREDIT, x, y, '')[:3]), gen.svg_raw)
+
     def test_durations_parser_handles_timing_functions(self):
         self.assertEqual(durations('.a{animation:x cubic-bezier(.2,.7,.2,1) 4s infinite,y 2s}'), ['4', '2'])
 
