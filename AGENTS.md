@@ -17,7 +17,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
                          install.sh ──► ~/.t3/userdata/themes/agent-works.{json,webp}
 ```
 
-- `python3 gen.py out` takes about a second and creates `out/` if needed. It writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. It asserts that the CSS is at most 50,000 characters (and prints the count, currently about 16.9K), that every overlay LED sits on a scene LED, and that the press and weld keyframes still match the timing in `ANCHORS`. `--no-id` leaves `id` out of the JSON, which is what `install.sh` uses.
+- `python3 gen.py out` takes about a second and creates `out/` if needed. It writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. It asserts that the CSS is at most 50,000 characters (and prints the count, currently about 20.3K), that every overlay LED sits on a scene LED, and that the press and weld keyframes still match the timing in `ANCHORS`. `--no-id` leaves `id` out of the JSON, which is what `install.sh` uses.
 - `python3 -m unittest discover -s tests` takes well under a second. It imports `gen` (importing builds the theme in memory and writes nothing) and checks the CSS limit and restrictions, LED and lamp alignment, that every scene animation period divides the 20 s loop, and the CLI outputs. Run it after any change to `gen.py` or `fx.py`.
 - `render/render.sh [scale=3] [quality=85]` takes about 6.5 minutes. Run it only when the scene changes in `gen.py`. It writes `media/agent-works.webp` (1440×960, 300 frames, 15 fps, 20 s loop, about 4.6 MB) and `media/agent-works-poster.png`. It runs `npm i` inside `render/` on its first run.
 - `render/preview.sh` takes about 30 seconds. It reuses `render/build/frames/` from the last render, composites `out/lights.svg` over them and writes `media/preview.gif`: 10 s idle, then the lights flicker on.
@@ -76,6 +76,8 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 - **Mascot:** one sprite sheet, 34×27 units with two 17-wide poses: idle gray, and typing with an amber face and fast arms. It's applied to `.composer-tiptap>:last-child::after`, and `:focus-within` switches between the poses with `background-position`.
 - **Streaming cursor:** `[data-streaming="true"]>:last-child::after`. `data-streaming` is set on the markdown wrapper of the reply that's currently streaming.
 - **Sidebar:** `[data-slot="sidebar-inner"]::before` shows `var(--theme-background-image)` (cropped, blurred, darkened) and `::after` is the amber chase rail. "Working anywhere" is `body:has(<live row>)` **or** `body:has([data-testid="sidebar-working-header"])`, the sidebar's "Working" shelf, which T3 renders while any thread runs (`busy()` in `fx.py` builds both). The open thread is `[data-sidebar-row][aria-current="page"]`. `aria-current` sits on the inner row div, **not** on `li[data-thread-item]`. A single row's running state is only a Tailwind class (`text-info-foreground`), so the theme doesn't target it.
+- **Hold state** (`WAIT` in `fx.py`): `[data-approval-detail]` renders only while an approval request is pending (T3 shows it from `pendingApprovals`), and `[data-pending-user-input-toggle]` is present while a question waits for an answer. Either one sets the lamps to a slow blink, puts hazard tape around the request, makes the sidebar rail a hazard bar and glows the composer.
+- **Performance:** animate only `transform` and `opacity` on large layers. The sidebar rail moves with `translateY`, not `background-position`. `filter` (the busy monogram outline) stays static. Keep `:has()` arguments to single attribute selectors.
 - **Colors** are only grays plus amber: `#ffb547`, `#ff9a2e` and `#ffe2a8`.
 - **Reduced motion:** add any new animation to the `prefers-reduced-motion` rule.
 
@@ -98,6 +100,7 @@ All of this came from reading the app bundle, `/Applications/T3 Code (Beta).app/
   - `.composer-tiptap`
   - `data-sidebar-row` (with `aria-current="page"` when open)
   - `data-testid` values `sidebar-working-header` and `sidebar-working-shelf-toggle`
+  - `data-approval-detail`, `data-pending-user-input-toggle`, `data-command-palette`, `data-chat-workspace-drop-overlay`, `data-model-picker-selected-indicator`, `data-timeline-row-kind="proposed-plan"`, `data-highlighted` on `menu-item`, `command-item`, `select-item` and `combobox-item`
 
 ## Checking changes in the live app
 

@@ -15,6 +15,8 @@ An animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3code)
 - **Rows and composer.** The live work row gets an amber border with a moving belt underline, and the composer border turns amber.
 - **CRT power-on.** A thin line opens into the scene when a chat loads.
 - **The sidebar.** A dim, blurred slice of the factory sits behind the thread list. While any agent works, an amber chase rail runs down the sidebar's edge, the "Working" shelf gets a blinking lamp, and project icons pulse with an amber pixel outline. The open thread gets an amber LED bar, and hovered rows warm toward amber.
+- **Line on hold.** When an agent waits for your approval or an answer, the lamps blink slowly, hazard tape runs around the request, the sidebar rail turns into a striped hold bar, and the composer glows amber until you respond.
+- **The control room.** The command palette, menus, toasts, model picker, plan cards, file drop zone, terminal drawer and settings page all match the factory: square steel frames, amber selection bars, an amber caret, and a striped loading dock when you drag files in.
 - **The composer mascot.** A small robot sits on the composer's top edge and follows the end of your text. When you click in, an amber sweep crosses the top edge, and the robot's face lights up while it types.
 - **Streaming replies** end with a blinking amber block cursor.
 - **Reduced motion.** When the system's "reduce motion" setting is on, all animation stops.

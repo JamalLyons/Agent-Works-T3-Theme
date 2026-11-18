@@ -584,7 +584,7 @@ colors = {
     "searchMatchActiveForeground": "#0c0d0e", "sidebar": "#17181a", "sidebarForeground": "#dcdddb",
     "sidebarMutedForeground": "#888b8e", "sidebarControlSurface": "#25272a", "sidebarRowHover": "#2a2621",
     "sidebarRowActive": "#33291d", "sidebarRowSelected": "#3d3022", "sidebarBorder": "#0c0d0e",
-    "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#f0f0ec",
+    "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#ffb547",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
 TID = 'agent-works'
