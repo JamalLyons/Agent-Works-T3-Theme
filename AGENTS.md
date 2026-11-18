@@ -78,6 +78,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 - **Streaming cursor:** `[data-streaming="true"]>:last-child::after`. `data-streaming` is set on the markdown wrapper of the reply that's currently streaming.
 - **Sidebar:** `[data-slot="sidebar-inner"]::before` shows `var(--theme-background-image)` (fixed to the window, darkened) and `::after` is the amber chase rail. "Working anywhere" is `body:has(<live row>)` **or** `body:has([data-testid="sidebar-working-header"])`, the sidebar's "Working" shelf, which T3 renders while any thread runs (`busy()` in `fx.py` builds both). The open thread is `[data-sidebar-row][aria-current="page"]`. `aria-current` sits on the inner row div, **not** on `li[data-thread-item]`. A single row's running state is only a Tailwind class (`text-info-foreground`), so the theme doesn't target it.
 - **Hold state** (`WAIT` in `fx.py`): `[data-approval-detail]` renders only while an approval request is pending (T3 shows it from `pendingApprovals`), and `[data-pending-user-input-toggle]` is present while a question waits for an answer. Either one sets the lamps to a slow blink, puts hazard tape around the request, makes the sidebar rail a hazard bar and glows the composer.
+- **Right panel and details card** (`details_css()` in `fx.py`): the right panel is `[data-workspace-area="panel"]` (tab bar `[data-right-panel-tabbar]`, header `[data-surface-subheader]`, body `[data-right-panel-surface-content]`). Its `::before` is the fixed, darkened scene and its `::after` is an amber chase on the left edge while any agent works. The thread details card (branch, PR, changes) is `[data-thread-details-card]`, normally a `dropdown-glass` popover; the theme drops the blur for a steel frame. Its PR action buttons sit in `[data-pull-request-action-pending]`, which is `true` while a merge or other action runs.
 - **Performance:** animate only `transform` and `opacity` on large layers. The sidebar rail moves with `translateY`, not `background-position`. Selection highlights are neutral steel (`SEL` in `fx.py`), never amber, so colored monograms stay readable. Keep `:has()` arguments to single attribute selectors.
 - **Colors** are only grays plus amber: `#ffb547`, `#ff9a2e` and `#ffe2a8`.
 - **Reduced motion:** add any new animation to the `prefers-reduced-motion` rule.
@@ -101,6 +102,7 @@ All of this came from reading the app bundle, `/Applications/T3 Code (Beta).app/
   - `.composer-tiptap`
   - `data-sidebar-row` (with `aria-current="page"` when open)
   - `data-testid` values `sidebar-working-header` and `sidebar-working-shelf-toggle`
+  - `data-workspace-area="panel"`, `data-right-panel-tabbar`, `data-right-panel-surface-content`, `data-surface-subheader`, `data-thread-details-card`, `data-pull-request-action-pending`
   - `data-approval-detail`, `data-pending-user-input-toggle`, `data-command-palette`, `data-chat-workspace-drop-overlay`, `data-model-picker-selected-indicator`, `data-timeline-row-kind="proposed-plan"`, `data-highlighted` on `menu-item`, `command-item`, `select-item` and `combobox-item`
 
 ## Checking changes in the live app
