@@ -1,77 +1,43 @@
-# Agent Works — a T3 Code theme
+# Agent Works
 
-An animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3code). Little TV-headed agent robots run a box assembly line in the grays of a '90s black-and-white CRT. When your agent starts working, the factory lights come on.
+An animated pixel-art factory theme for [T3 Code](https://github.com/pingdotgg/t3code). Little TV-headed robots run a box assembly line in the grays of an old black-and-white CRT, and when your agent starts working, the factory lights come on.
 
-![Agent Works preview: idle, then the lights come on](media/preview.gif)
+![Agent Works in T3 Code: the lights come on while the agent works, then go dark when it finishes](media/demo.gif)
 
-## What's in the scene
+## Features
 
-- **A high-detail animated background.** It's a 1440×960 WebP that loops every 20 seconds, with light shafts and drifting dust from the windows, a glow on bright pixels, floor reflections and soft shadows.
-- **The assembly line.** A box drops from the chute and stops at each station. The inspector gives it a ✓. The press slams down with sparks, squashes the box and stamps a label. The tape robot seals it, and the box tips into the bin.
-- **Around the line.** A welder throws sparks at the left wall, and steam drifts through the window light. A crane hook, a chain and a pipe in the foreground move at a different speed from the wall, which gives the scene depth. Robots walk across the floor.
-
-**What reacts to T3 Code:**
-- **The factory turns on while the agent works.** The amber lamps and the **AGENT WORKS** sign flicker on, chase lights run along the belt and the LEDs blink. When the turn ends, everything goes dark again.
-- **Rows and composer.** The live work row gets an amber border with a moving belt underline, and the composer border turns amber.
-- **CRT power-on.** A thin line opens into the scene when a chat loads.
-- **The sidebar.** The factory continues behind the thread list, lined up with the chat area so the belt runs straight across the window. While any agent works, an amber chase rail runs down the sidebar's edge, the "Working" shelf gets a blinking lamp, and project icons get a thin amber outline. The open thread gets a soft steel highlight.
-- **Line on hold.** When an agent waits for your approval or an answer, the lamps blink slowly, hazard tape runs around the request, the sidebar rail turns into a striped hold bar, and the composer glows amber until you respond.
-- **The control room.** The command palette, menus, toasts, model picker, plan cards, file drop zone, terminal drawer and settings page all match the factory: square steel frames, soft steel selection highlights, an amber caret, and a striped loading dock when you drag files in.
-- **The composer mascot.** A small robot sits on the composer's top edge and follows the end of your text. When you click in, an amber sweep crosses the top edge, and the robot's face lights up while it types.
-- **Streaming replies** end with a blinking amber block cursor.
-- **Reduced motion.** When the system's "reduce motion" setting is on, all animation stops.
+- **A living background.** A 20-second looping assembly line: a chute, an inspector, a press with sparks, a tape robot, a welder, steam, light shafts and drifting dust.
+- **Lights on while the agent works.** The lamps, the **AGENT WORKS** sign and the belt chase lights switch on during a turn and go dark when it ends.
+- **A sidebar that reacts too.** The factory continues behind the thread list, and an amber rail runs down its edge while any agent is working.
+- **Hold state.** When an agent waits for your approval or an answer, the lamps blink slowly and hazard tape wraps the request.
+- **A composer mascot.** A small robot sits on the composer and starts typing when you do.
+- **Matching UI.** Menus, the command palette, toasts and settings all get the same steel-and-amber look.
+- **Reduced motion.** All animation stops when your system's "reduce motion" setting is on.
 
 ## Install
 
-> [!WARNING]
-> Install only with `./install.sh`. Don't use **Add theme** in T3 Code's settings. T3 loads the animated background only for themes in its themes folder. A copy added with **Add theme** shows a blank scene and hides the working copy. If you already added one that way, remove it in **Settings → Appearance** first.
-
 ```sh
+git clone https://github.com/JamalLyons/Agent-Works-T3-Theme.git
+cd Agent-Works-T3-Theme
 ./install.sh
 ```
 
 Then in T3 Code, open **Settings → Appearance** and select **Agent Works**.
 
-The script builds the theme and copies two files into `~/.t3/userdata/themes`:
-- `agent-works.json`, the theme itself
-- `agent-works.webp`, the animated background
+> [!IMPORTANT]
+> Use `./install.sh`, not **Add theme** in T3 Code's settings. T3 Code only loads the animated background for themes in its themes folder (`~/.t3/userdata/themes`). If you already added Agent Works with **Add theme**, remove that copy in **Settings → Appearance** first.
 
-**Updating:** run `./install.sh` again. If Agent Works is already installed, it asks before replacing it. Pass `-y` to skip the question.
+- **Update:** pull the latest changes and run `./install.sh` again.
+- **Uninstall:** run `./uninstall.sh`, then pick another theme.
 
-**Uninstalling:** run `./uninstall.sh`. It lists the files it will delete and asks before deleting anything. It deletes only Agent Works' own files and leaves everything else in the folder alone. Afterwards, pick another theme in **Settings → Appearance**.
+The install needs Python 3.
 
-To use a different themes folder with either script, set `T3_THEMES_DIR`.
+## Development
 
-## How it works
-
-T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image file named after the theme as `var(--theme-background-image)`. That image doesn't count toward the limit. So the scene is pre-rendered as an animated WebP, and the CSS (about 14K) is left for the parts that react to the app:
-
-- **Lights on.** `[data-workspace-area="conversation"]:has([data-timeline-row-kind="working"], [data-timeline-row-kind="work-live"])` fades in a pseudo-element. It holds a small SVG of amber light (lamp cones, the sign, belt chase lights, LEDs), screen-blended over the scene. It uses the same `viewBox` and `center bottom / cover` sizing as the background, so it lines up at any window size.
-- **Everything else** uses stable selectors from T3's theme guide.
-
-**Files:**
-
-| File | What it does |
-|---|---|
-| `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. |
-| `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row, composer and sidebar effects, and the streaming cursor. |
-| `tests/` | Quick checks of the build (CSS limit, light alignment, 20-second loop). Run with `python3 -m unittest discover -s tests`. |
-| `render/render.sh` | Renders `out/factory.svg` in headless Brave with bloom, light shafts, dust and depth. It captures 300 frames and encodes `media/agent-works.webp`. Takes about 6.5 minutes and needs Brave, `img2webp` and Node. |
-| `render/preview.sh` | Builds `media/preview.gif` from the rendered frames plus the light overlay. Needs `ffmpeg`. |
-| `install.sh` | Builds the theme and copies the JSON and WebP into T3 Code's themes folder. If a copy is already installed, it asks before replacing it. |
-| `uninstall.sh` | Deletes only `agent-works.json` and its background image from the themes folder, after you confirm. |
-
-**Rebuild steps:**
+The theme is generated by `gen.py` and `fx.py`, and the background is rendered in a headless browser by `render/render.sh`. Run the checks with:
 
 ```sh
-python3 -m unittest discover -s tests   # under a second
-render/render.sh      # only after scene changes in gen.py
-render/preview.sh     # optional: refresh the README GIF
-./install.sh -y
+python3 -m unittest discover -s tests
 ```
 
-**Rules for scene changes:**
-- Everything in the scene must loop evenly in 20 seconds, so the WebP has no visible jump.
-- Keep the middle of the wall (x 133 to 347 in scene units) calm, because the chat column covers it.
-
-**Notes for agents:** [AGENTS.md](AGENTS.md) explains the build pipeline, the scene coordinates and the T3 Code internals this theme depends on.
+See [AGENTS.md](AGENTS.md) for how the build works and the T3 Code details it depends on.
