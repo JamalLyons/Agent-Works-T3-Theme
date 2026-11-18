@@ -61,6 +61,9 @@ FONT = {
     'O': ['010', '101', '101', '101', '010'], 'R': ['110', '101', '110', '101', '101'],
     'K': ['101', '101', '110', '101', '101'], 'S': ['011', '100', '010', '001', '110'],
     ' ': ['000'] * 5, '3': ['110', '001', '010', '001', '110'], 'N': ['110', '101', '101', '101', '101'],
+    'J': ['001', '001', '001', '101', '010'], 'M': ['10001', '11011', '10101', '10001', '10001'],
+    'L': ['100', '100', '100', '100', '111'], 'Y': ['101', '101', '010', '010', '010'],
+    'C': ['011', '100', '100', '100', '011'], '.': ['000', '000', '000', '000', '010'],
 }
 
 
@@ -71,8 +74,11 @@ def text(s, x, y, c):
             for i, b in enumerate(row):
                 if b == '1':
                     out.append((c, x + i, y + j, 1, 1))
-        x += 4
+        x += len(FONT[ch][0]) + 1
     return out
+
+def text_w(s):
+    return sum(len(FONT[ch][0]) + 1 for ch in s) - 1
 
 
 # ---------- sprites ----------
@@ -222,6 +228,18 @@ for i in range(3):
 # shelf with spare parts on the far right
 parts.append(g([(K, 446, 120, 34, 3), (G[6], 447, 120, 33, 1), (K, 450, 123, 2, 6), (K, 474, 123, 2, 6)] +
                box_sprite(452, 106) + [(K, 470, 110, 8, 10), (G[7], 471, 111, 6, 8)]))
+
+# maker's plate: the author credit, bolted to the wall above the tape station.
+# Kept right of the chat column and low enough to survive the bottom-anchored cover crop; text is one
+# shade off the plate so it reads as set dressing, not a watermark.
+CREDIT = 'JAMALLYONS.COM'
+CREDIT_XY = (382, 200)   # text origin; plate is 3 px larger on every side
+cw = text_w(CREDIT)
+px_, py_ = CREDIT_XY[0] - 3, CREDIT_XY[1] - 3
+parts.append(g([(K, px_, py_, cw + 6, 11), (G[2], px_ + 1, py_ + 1, cw + 4, 9), (G[4], px_ + 1, py_ + 1, cw + 4, 1),
+                (G[5], px_ + 1, py_ + 1, 1, 1), (G[5], px_ + cw + 4, py_ + 1, 1, 1),
+                (G[5], px_ + 1, py_ + 9, 1, 1), (G[5], px_ + cw + 4, py_ + 9, 1, 1)]))
+parts.append(g(text(CREDIT, *CREDIT_XY, G[5])))
 
 # hanging lamps above the side stations + light cones
 LAMPS = (100, 382)   # cord x; the unlit bulb is the 3x1 rect at (lx-1, BULB_Y)
@@ -566,6 +584,8 @@ theme_css = ''.join(l.strip() for l in theme_css.strip().splitlines())
 # The scene comes from the rendered animated WebP beside the theme file (var(--theme-background-image)),
 # which already carries its own vignette, scanlines and shading; keep only the chat band on top.
 theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(ANCHORS, g, text, R, enc)
+CREDIT_CSS = '/* Agent Works by Jamal Lyons | jamallyons.com | x.com/codingwithjamal */'
+theme_css = CREDIT_CSS + theme_css
 
 colors = {
     "canvas": "#1c1e20", "chrome": "#141517", "toolbar": "#1c1e20", "toolbarForeground": "#dcdddb",

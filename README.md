@@ -42,6 +42,10 @@ python3 -m unittest discover -s tests
 
 See [AGENTS.md](AGENTS.md) for how the build works and the T3 Code details it depends on.
 
+## Credits
+
+Made by [Jamal Lyons](https://www.jamallyons.com/) ([@codingwithjamal](https://x.com/codingwithjamal)).
+
 ## License
 
 [MIT](LICENSE)

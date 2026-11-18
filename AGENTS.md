@@ -48,7 +48,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 - **Helpers:**
   - `g(rects)` merges `(color, x, y, w, h)` rects into one path per color.
   - `sprite(rows, pal)` turns an ASCII map into rects.
-  - `text()` uses the 3×5 pixel `FONT`.
+  - `text()` uses the 5-tall pixel `FONT` (glyphs are 3 wide, `M` is 5; advance is glyph width + 1). `text_w()` measures a string.
 - **Loop:** every animation period must divide **20 s** (the box cycle), or the WebP jumps when it loops. The station clock is 4 s; the belt pauses from 0% to 37.5% and moves 64 px from 37.5% to 100%.
 - **Scene anchors (`ANCHORS` in `gen.py`).** This is the one source of positions for `fx.py` (the overlay) and `render/fx.js` (the canvas effects, through `out/anchors.json` → `window.AW_ANCHORS`). Each anchor comes from the same variable that draws it (`LAMPS`, `BULB_Y`, `WINS`, `WELD`, `PRESS_LEDS`, ...), so moving a station moves its lights too. Never retype a coordinate in `fx.py` or `fx.js`; add it to `ANCHORS` instead. Current values:
 
@@ -63,6 +63,7 @@ gen.py ──► out/factory.svg ──► render/render.sh ──► media/agen
 | Press hit | `pressHit` | (356, 247) at 0.38 s of each 4 s cycle (`.pr` keyframe 9.5%) |
 | Weld arc | `weld` | (14, 160), on for the first 2.2 s of 5 s (`.wo` keyframe 44%) |
 
+- **Author credit:** a maker's plate reading `JAMALLYONS.COM` (`CREDIT`, `CREDIT_XY` = text origin (382, 200)) on the wall between the press and the crane chain, text one shade off the plate. It must stay right of the chat column and left of the chain at x 446 (a test checks both). The theme CSS also starts with a `/* Agent Works by Jamal Lyons ... */` comment (`CREDIT_CSS`).
 - **Foreground layer** (`FG`, x 0–120 pipe, chain at x 72–78, crane hook near x 456–508). It uses class `fg`. `page.mjs` blurs it slightly and leaves it out of the bloom and reflection copies.
 
 ## How the reactive layer works (fx.py)
