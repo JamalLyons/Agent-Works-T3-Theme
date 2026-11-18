@@ -107,6 +107,12 @@ def box_sprite(x, y):
 
 
 # ---------- scene ----------
+# 480x320 scene. Chat column covers roughly x 133..347 at a 1.4:1 window, so the
+# working stations sit in the side zones and only a fast belt span crosses the middle.
+W, H = 480, 320
+FY = 282            # floor line
+DY = 150            # line layer offset (line art is drawn in the old 180-high coords)
+S = (36, 92, 220, 348, 404)   # box rest x: chute, inspector, (transit), press, tape
 parts = []
 defs = []
 
@@ -115,12 +121,11 @@ defs.append("<pattern id='br' width='16' height='8' patternUnits='userSpaceOnUse
             f"<path fill='{G[3]}' d='M0 0h16v8H0z'/>"
             f"<path fill='{G[2]}' d='M0 3h16v1H0zM0 7h16v1H0zM7 0h1v3H7zM15 4h1v3h-1z'/>"
             f"<path fill='{G[4]}' d='M1 0h5v1H1zM9 4h5v1H9z'/></pattern>")
-parts.append(f"<path fill='url(%23br)' d='M0 0h320v132H0z'/>")
-# soft light falloff on wall
-defs.append("<radialGradient id='wl' cx='50%' cy='40%' r='65%'>"
-            f"<stop offset='0' stop-color='{G[9]}' stop-opacity='.10'/>"
+parts.append(f"<path fill='url(%23br)' d='M0 0h{W}v{FY}H0z'/>")
+defs.append("<radialGradient id='wl' cx='50%' cy='45%' r='70%'>"
+            f"<stop offset='0' stop-color='{G[9]}' stop-opacity='.08'/>"
             f"<stop offset='1' stop-color='{K}' stop-opacity='.35'/></radialGradient>")
-parts.append("<path fill='url(%23wl)' d='M0 0h320v132H0z'/>")
+parts.append(f"<path fill='url(%23wl)' d='M0 0h{W}v{FY}H0z'/>")
 
 # windows with sky, clouds, distant chimneys
 defs.append("<linearGradient id='sk' x1='0' y1='0' x2='0' y2='1'>"
@@ -128,37 +133,38 @@ defs.append("<linearGradient id='sk' x1='0' y1='0' x2='0' y2='1'>"
 defs.append("<pattern id='cl' width='60' height='30' patternUnits='userSpaceOnUse'>"
             f"<path fill='{G[11]}' d='M6 6h10v1h3v2H3V7h3zM34 15h8v1h3v2H30v-2h4zM48 3h6v1h2v1h-9V4h1z'/>"
             f"<path fill='{G[9]}' d='M3 9h16v1H3zM30 18h15v1H30z'/></pattern>")
-for wx in (36, 240):
+WINS = ((142, 96), (296, 96))
+for wx, wy in WINS:
+    o = wy - 17
     cid = f'w{wx}'
-    defs.append(f"<clipPath id='{cid}'><path d='{R(wx + 2, 20, 40, 26)}'/></clipPath>")
-    parts.append(g([(K, wx - 1, 17, 46, 33), (G[6], wx, 18, 44, 30)]))
-    inner = f"<path fill='url(%23sk)' d='{R(wx + 2, 20, 40, 26)}'/>"
-    inner += f"<g class='cld'><path fill='url(%23cl)' opacity='.8' d='M{wx - 58} 20h160v26h-160z'/></g>"
-    # distant factory silhouette
-    inner += g([(G[7], wx + 2, 38, 40, 8), (G[7], wx + 8, 30, 4, 8), (G[7], wx + 26, 26, 4, 12),
-                (G[6], wx + 2, 42, 40, 4), (G[7], wx + 14, 34, 8, 4)])
-    for i, (sx, sy) in enumerate(((wx + 10, 28), (wx + 28, 24))):
-        inner += f"<g class='smk s{i}'><path fill='{G[11]}' d='{R(sx - 1, sy - 2, 3, 2)}'/></g>"
+    defs.append(f"<clipPath id='{cid}'><path d='{R(wx + 2, 20 + o, 40, 26)}'/></clipPath>")
+    parts.append(g([(K, wx - 1, 17 + o, 46, 33), (G[6], wx, 18 + o, 44, 30)]))
+    inner = f"<path fill='url(%23sk)' d='{R(wx + 2, 20 + o, 40, 26)}'/>"
+    inner += f"<g class='cld'><path fill='url(%23cl)' opacity='.8' d='M{wx - 58} {20 + o}h160v26h-160z'/></g>"
+    inner += g([(G[7], wx + 2, 38 + o, 40, 8), (G[7], wx + 8, 30 + o, 4, 8), (G[7], wx + 26, 26 + o, 4, 12),
+                (G[6], wx + 2, 42 + o, 40, 4), (G[7], wx + 14, 34 + o, 8, 4)])
+    for i, (sx_, sy_) in enumerate(((wx + 10, 28 + o), (wx + 28, 24 + o))):
+        inner += f"<g class='smk s{i}'><path fill='{G[11]}' d='{R(sx_ - 1, sy_ - 2, 3, 2)}'/></g>"
     parts.append(f"<g clip-path='url(%23{cid})'>{inner}</g>")
-    parts.append(g([(G[6], wx + 21, 20, 2, 26), (G[6], wx + 2, 32, 40, 2),
-                    (G[8], wx, 18, 44, 1), (G[4], wx, 47, 44, 1), (G[9], wx - 2, 48, 48, 2), (K, wx - 2, 50, 48, 1)]))
-
-# light shafts from windows
-for wx in (36, 240):
-    parts.append(f"<path class='sh' fill='{G[12]}' d='M{wx + 2} 46L{wx + 42} 46L{wx + 70} 132L{wx + 22} 132Z' opacity='.035'/>")
+    parts.append(g([(G[6], wx + 21, 20 + o, 2, 26), (G[6], wx + 2, 32 + o, 40, 2),
+                    (G[8], wx, 18 + o, 44, 1), (G[4], wx, 47 + o, 44, 1), (G[9], wx - 2, 48 + o, 48, 2),
+                    (K, wx - 2, 50 + o, 48, 1)]))
+    parts.append(f"<path class='sh' fill='{G[12]}' d='M{wx + 2} {46 + o}L{wx + 42} {46 + o}"
+                 f"L{wx + 62} {FY}L{wx + 22} {FY}Z' opacity='.03'/>")
 
 # ceiling beam + truss
-parts.append(g([(G[1], 0, 0, 320, 6), (G[4], 0, 5, 320, 1), (G[2], 0, 6, 320, 1)] +
-               [(G[6], x, 2, 1, 1) for x in range(6, 320, 16)]))
+parts.append(g([(G[1], 0, 0, W, 6), (G[4], 0, 5, W, 1), (G[2], 0, 6, W, 1)] +
+               [(G[6], x, 2, 1, 1) for x in range(6, W, 16)]))
 
-# sign: AGENT WORKS
-sx = 160 - 22
-parts.append(g([(K, sx - 4, 9, 51, 11), (G[2], sx - 3, 10, 49, 9), (G[5], sx - 3, 10, 49, 1),
-                (K, sx + 4, 6, 1, 3), (K, sx + 38, 6, 1, 3)]))
-parts.append(g(text('AGENT WORKS', sx, 12, G[11]), cls='sg'))
+# sign: AGENT WORKS (hung on long cables)
+sx = 240 - 22
+SY = 56
+parts.append(g([(K, sx - 4, SY, 51, 11), (G[2], sx - 3, SY + 1, 49, 9), (G[5], sx - 3, SY + 1, 49, 1),
+                (K, sx + 4, 6, 1, SY - 6), (K, sx + 38, 6, 1, SY - 6)]))
+parts.append(g(text('AGENT WORKS', sx, SY + 3, G[11]), cls='sg'))
 
-# clock
-cx, cy = 204, 40
+# clock (between the windows)
+cx, cy = 240, 112
 clock = sprite([
     '...kkkkk...',
     '..kwwwwwk..',
@@ -178,51 +184,71 @@ parts.append(f"<g class='mh'><path fill='{K}' d='{R(cx, cy - 4, 1, 4)}'/></g>")
 parts.append(f"<g class='hh'><path fill='{G[5]}' d='{R(cx, cy, 3, 1)}'/></g>")
 parts.append(g([(K, cx, cy, 1, 1)]))
 
-# pipes + steam vent
-parts.append(g([(G[5], 0, 60, 24, 4), (G[7], 0, 60, 24, 1), (G[3], 0, 63, 24, 1),
-                (G[5], 292, 66, 28, 4), (G[7], 292, 66, 28, 1), (G[3], 292, 69, 28, 1),
-                (G[5], 292, 66, 4, 66), (G[7], 292, 66, 1, 66), (G[6], 290, 90, 8, 3), (G[6], 290, 112, 8, 3),
-                (G[6], 306, 62, 6, 4), (K, 307, 61, 4, 1)]))
+# pipes: left wall run + control panel, right wall run with steam vent
+pipes = [(G[5], 0, 196, 30, 4), (G[7], 0, 196, 30, 1), (G[3], 0, 199, 30, 1), (G[6], 18, 194, 3, 8),
+         (G[5], 10, 7, 4, 189), (G[7], 10, 7, 1, 189), (G[6], 8, 60, 8, 3), (G[6], 8, 130, 8, 3),
+         # control panel
+         (K, 2, 214, 22, 30), (G[5], 3, 215, 20, 28), (G[7], 3, 215, 20, 1), (K, 6, 219, 14, 8), (G[2], 7, 220, 12, 6),
+         (G[3], 6, 231, 4, 4), (G[3], 12, 231, 4, 4), (G[7], 7, 237, 12, 1),
+         # right run
+         (G[5], 440, 186, 40, 4), (G[7], 440, 186, 40, 1), (G[3], 440, 189, 40, 1),
+         (G[5], 466, 186, 4, 96), (G[7], 466, 186, 1, 96), (G[6], 464, 214, 8, 3), (G[6], 464, 248, 8, 3),
+         (G[6], 446, 182, 6, 4), (K, 447, 181, 4, 1),
+         # gauge
+         (K, 470, 196, 9, 9), (G[11], 471, 197, 7, 7), (K, 474, 199, 1, 3)]
+parts.append(g(pipes))
+parts.append(g([(G[13], 8, 221, 2, 2)], cls='pl a') + g([(G[11], 12, 221, 2, 2)], cls='pl c') +
+             g([(G[9], 8, 224, 9, 1)], cls='pw'))
 for i in range(3):
-    parts.append(f"<g class='stm t{i}'><path fill='{G[11]}' d='M308 57h3v1h1v2h-5v-2h1z'/></g>")
+    parts.append(f"<g transform='translate(140 120)'><g class='stm t{i}'><path fill='{G[11]}' d='M308 57h3v1h1v2h-5v-2h1z'/></g></g>")
+# shelf with spare parts on the far right
+parts.append(g([(K, 446, 120, 34, 3), (G[6], 447, 120, 33, 1), (K, 450, 123, 2, 6), (K, 474, 123, 2, 6)] +
+               box_sprite(452, 106) + [(K, 470, 110, 8, 10), (G[7], 471, 111, 6, 8)]))
 
-# hanging lamps above workers + light cones
-for lx in (118, 244):
-    parts.append(f"<path class='lc' fill='{G[13]}' d='M{lx - 4} 28L{lx + 5} 28L{lx + 26} 112L{lx - 25} 112Z' opacity='.05'/>")
-    parts.append(g([(K, lx, 6, 1, 16), (K, lx - 4, 22, 9, 5), (G[6], lx - 3, 22, 7, 1), (G[4], lx - 3, 23, 7, 3),
-                    (G[13], lx - 1, 27, 3, 1)]))
+# hanging lamps above the side stations + light cones
+for lx in (100, 382):
+    parts.append(f"<path class='lc' fill='{G[13]}' d='M{lx - 4} 178L{lx + 5} 178L{lx + 26} 262L{lx - 25} 262Z' opacity='.05'/>")
+    parts.append(g([(K, lx, 6, 1, 166), (K, lx - 4, 172, 9, 5), (G[6], lx - 3, 172, 7, 1), (G[4], lx - 3, 173, 7, 3),
+                    (G[13], lx - 1, 177, 3, 1)]))
 
-# chute (drawn after boxes, see below) ; stamper housing
-stamper_housing = g([(G[2], 158, 20, 4, 6),
-                     (K, 145, 26, 30, 50), (G[6], 146, 27, 28, 48), (G[8], 146, 27, 28, 2), (G[4], 146, 73, 28, 2),
-                     (K, 150, 33, 20, 12), (G[3], 151, 34, 18, 10),
-                     (G[3], 149, 52, 22, 1), (G[3], 149, 56, 22, 1), (G[3], 149, 60, 22, 1),
-                     (K, 148, 76, 24, 3), (G[4], 157, 76, 6, 6)])
-stamper_lights = (g([(G[13], 153, 37, 2, 2)], cls='pl a') + g([(G[11], 158, 37, 2, 2)], cls='pl b') +
-                  g([(G[12], 163, 37, 2, 2)], cls='pl c') + g([(G[9], 153, 41, 13, 1)], cls='pw'))
-stamper_head = g([(G[9], 158, 78, 4, 6), (G[11], 158, 78, 1, 6), (K, 148, 84, 24, 6), (G[9], 149, 85, 22, 4),
-                  (G[11], 149, 85, 22, 1), (G[6], 150, 89, 20, 1)], cls='pr')
+# ---------- line layer (old coords, shifted down by DY) ----------
+PX = S[3] + 8 - 160          # press x offset from the old 160-centered drawing
+def sh(rects, dx):
+    return [(c, x + dx, y, w, h) for c, x, y, w, h in rects]
 
-# ---------- belt ----------
-belt_back = g([(G[1], 14, 110, 282, 2)])
-defs.append(f"<clipPath id='bc'><path d='{R(16, 112, 276, 4)}'/></clipPath>")
-stripes = [(G[4], x, 113, 3, 2) for x in range(-48, 300, 8)]
-belt_top = (g([(G[7], 16, 112, 276, 4), (G[9], 16, 112, 276, 1)]) +
-            f"<g clip-path='url(%23bc)'>{g(stripes, cls='bt')}</g>")
-belt_side = [(K, 14, 116, 282, 6), (G[3], 15, 117, 280, 4), (G[5], 15, 117, 280, 1)]
-for x in range(24, 292, 16):
+stamper_housing = g(sh([(K, 157, -150, 6, 176), (G[4], 158, -150, 4, 176),
+                        (K, 145, 26, 30, 50), (G[6], 146, 27, 28, 48), (G[8], 146, 27, 28, 2), (G[4], 146, 73, 28, 2),
+                        (K, 150, 33, 20, 12), (G[3], 151, 34, 18, 10),
+                        (G[3], 149, 52, 22, 1), (G[3], 149, 56, 22, 1), (G[3], 149, 60, 22, 1),
+                        (K, 148, 76, 24, 3), (G[4], 157, 76, 6, 6)], PX))
+stamper_lights = (g(sh([(G[13], 153, 37, 2, 2)], PX), cls='pl a') + g(sh([(G[11], 158, 37, 2, 2)], PX), cls='pl b') +
+                  g(sh([(G[12], 163, 37, 2, 2)], PX), cls='pl c') + g(sh([(G[9], 153, 41, 13, 1)], PX), cls='pw'))
+stamper_head = g(sh([(G[9], 158, 78, 4, 6), (G[11], 158, 78, 1, 6), (K, 148, 84, 24, 6), (G[9], 149, 85, 22, 4),
+                     (G[11], 149, 85, 22, 1), (G[6], 150, 89, 20, 1)], PX), cls='pr')
+
+# ---------- belt: three spans (left, fast middle, right) joined by drive gears ----------
+BX0, BX1 = S[0] - 14, S[4] + 16
+J1, J2 = 138, 334
+belt_back = g([(G[1], BX0 - 2, 110, BX1 - BX0 + 4, 2)])
+belt_top = g([(G[7], BX0, 112, BX1 - BX0, 4), (G[9], BX0, 112, BX1 - BX0, 1)])
+for i, (a, b, d) in enumerate(((BX0, J1, 56), (J1, J2, 128), (J2, BX1, 56))):
+    defs.append(f"<clipPath id='b{i}'><path d='{R(a, 112, b - a, 4)}'/></clipPath>")
+    stripes = [(G[4], x, 113, 3, 2) for x in range(a - d - 8, b, 8)]
+    belt_top += f"<g clip-path='url(%23b{i})'>{g(stripes, cls=f'bt b{d}')}</g>"
+belt_top += g([(K, J1 - 1, 112, 2, 4), (K, J2 - 1, 112, 2, 4)])
+belt_side = [(K, BX0 - 2, 116, BX1 - BX0 + 4, 6), (G[3], BX0 - 1, 117, BX1 - BX0 + 2, 4), (G[5], BX0 - 1, 117, BX1 - BX0 + 2, 1)]
+for x in range(BX0 + 10, BX1 - 4, 16):
     belt_side += [(G[6], x, 118, 2, 2)]
 legs = []
-for x in (28, 92, 156, 220, 280):
+for x in (BX0 + 6, 104, 182, 260, 316, BX1 - 22):
     legs += [(K, x, 122, 5, 18), (G[4], x + 1, 122, 3, 17), (G[6], x + 1, 122, 1, 17), (K, x - 1, 139, 7, 2)]
 belt_front = g(belt_side) + g(legs)
 gears = ''
-for gx in (20, 288):
+for gx in (BX0 + 4, J1, J2, BX1 - 4):
     gears += g([(K, gx - 4, 115, 9, 9), (G[8], gx - 3, 116, 7, 7), (G[5], gx - 1, 118, 3, 3)])
-    gears += g([(K, gx, 116, 1, 2), (K, gx, 121, 1, 2), (K, gx - 3, 119, 2, 1), (K, gx + 2, 119, 2, 1)],
-               cls='gr', extra=f" style='transform-origin:{gx + .5}px {119.5}px'")
+    gears += g([(K, gx, 116, 1, 2), (K, gx, 121, 1, 2), (K, gx - 3, 119, 2, 1), (K, gx + 2, 119, 2, 1)], cls='gr')
 
-# ---------- boxes (5 on a 20s loop, stations 64px apart) ----------
+# ---------- boxes (5 on a 20s loop) ----------
 boxes = ''
 for i in range(5):
     b = g(box_sprite(0, 0))
@@ -231,12 +257,13 @@ for i in range(5):
     b += g([(G[12], 7, 0, 2, 14), (G[13], 7, 0, 1, 14)], cls='tap', extra=d)
     boxes += f"<g class='bx' style='animation-delay:-{i * 4}s'><g transform='translate(0 98)'>{b}</g></g>"
 
-# ---------- chute ----------
-chute = g([(K, 20, 0, 24, 82), (G[5], 21, 0, 22, 81), (G[7], 21, 0, 3, 81), (G[3], 40, 0, 3, 81),
-           (K, 17, 78, 30, 8), (G[6], 18, 79, 28, 6), (G[8], 18, 79, 28, 1), (G[3], 20, 85, 24, 1),
-           (G[3], 21, 30, 22, 2), (G[3], 21, 54, 22, 2), (G[8], 22, 31, 1, 1), (G[8], 22, 55, 1, 1)])
-lever = (g([(K, 46, 70, 4, 8), (G[6], 47, 71, 2, 6)]) +
-         f"<g class='lv' style='transform-origin:48px 74px'>{g([(K, 48, 62, 1, 12), (G[12], 47, 60, 3, 3)])}</g>")
+# ---------- chute (runs up to the ceiling) ----------
+CX = S[0] - 4
+chute = g(sh([(K, 20, -150, 24, 232), (G[5], 21, -150, 22, 231), (G[7], 21, -150, 3, 231), (G[3], 40, -150, 3, 231),
+              (K, 17, 78, 30, 8), (G[6], 18, 79, 28, 6), (G[8], 18, 79, 28, 1), (G[3], 20, 85, 24, 1)] +
+             [r for y in (-110, -60, -10, 30, 54) for r in ((G[3], 21, y, 22, 2), (G[8], 22, y + 1, 1, 1))], CX - 20))
+lever = (g([(K, CX + 26, 70, 4, 8), (G[6], CX + 27, 71, 2, 6)]) +
+         f"<g class='lv'>{g([(K, CX + 28, 62, 1, 12), (G[12], CX + 27, 60, 3, 3)])}</g>")
 
 # ---------- workers ----------
 def worker(x, y, arm_cls, eye_cls, bob_delay):
@@ -244,32 +271,28 @@ def worker(x, y, arm_cls, eye_cls, bob_delay):
             f"{robot_body(arm_cls)}{robot_head(eye_cls)}</g></g>")
 
 
-w_lever = worker(50, 87, 'arL', 'ey e1', -0.3)
-w_scan = worker(110, 87, 'arS', 'ey e2 lk', -1.1)
-w_tape = worker(236, 87, 'arT', 'ey e3', -0.7)
-# inspector pops a little check-mark bubble
+w_lever = worker(CX + 30, 87, 'arL', 'ey e1', -0.3)
+w_scan = worker(S[1] + 22, 87, 'arS', 'ey e2 lk', -1.1)
+w_tape = worker(S[4] - 20, 87, 'arT', 'ey e3', -0.7)
 bub = sprite(['kkkkkkkkk', 'kwwwwwwwk', 'kwwwwwkwk', 'kwkwwkwwk', 'kwwkkwwwk', 'kwwwwwwwk', 'kkkkkkkkk', '...kk....', '...k.....'],
-             {'k': K, 'w': G[12]}, 122, 72)
+             {'k': K, 'w': G[12]}, S[1] + 34, 72)
 beam = g(bub, cls='bm')
 
 # ---------- bin ----------
-bin_back = g([(K, 286, 116, 32, 4), (G[2], 287, 117, 30, 3)])
-bin_front = g([(K, 284, 120, 36, 22), (G[6], 285, 121, 34, 20), (G[8], 285, 121, 34, 1), (G[4], 285, 139, 34, 2),
-               (G[4], 289, 126, 26, 1), (G[4], 289, 130, 26, 1), (G[4], 289, 134, 26, 1),
-               (K, 286, 141, 4, 3), (K, 314, 141, 4, 3)])
+BN = S[4] + 4
+bin_back = g([(K, BN + 2, 116, 32, 4), (G[2], BN + 3, 117, 30, 3)])
+bin_front = g([(K, BN, 120, 36, 22), (G[6], BN + 1, 121, 34, 20), (G[8], BN + 1, 121, 34, 1), (G[4], BN + 1, 139, 34, 2),
+               (G[4], BN + 5, 126, 26, 1), (G[4], BN + 5, 130, 26, 1), (G[4], BN + 5, 134, 26, 1),
+               (K, BN + 2, 141, 4, 3), (K, BN + 30, 141, 4, 3)])
 
 # ---------- floor ----------
-floor = [(G[1], 0, 132, 320, 4), (G[4], 0, 132, 320, 1), (G[2], 0, 136, 320, 44)]
-for y in (141, 149, 160, 175):
-    floor.append((G[3], 0, y, 320, 1))
-floor_lines = ''.join(f"<path stroke='{G[3]}' stroke-width='1' d='M{160 + (x - 160) * .55} 136L{x} 180'/>"
-                      for x in range(-120, 460, 40))
-# hazard stripes along floor walkway
-haz = []
-for x in range(0, 320, 8):
-    haz += [(G[6], x, 145, 4, 2)]
+floor = [(G[1], 0, FY, W, 4), (G[4], 0, FY, W, 1), (G[2], 0, FY + 4, W, H - FY - 4)]
+for y in (FY + 9, FY + 17, FY + 28):
+    floor.append((G[3], 0, y, W, 1))
+floor_lines = ''.join(f"<path stroke='{G[3]}' stroke-width='1' d='M{240 + (x - 240) * .55:g} {FY + 4}L{x} {H}'/>"
+                      for x in range(-160, 680, 40))
+haz = [(G[6], x, FY + 13, 4, 2) for x in range(0, W, 8)]
 
-# props: plant + stacked boxes
 plant = sprite([
     '...l..l....',
     '.l.ll.l.l..',
@@ -284,21 +307,20 @@ plant = sprite([
     '..kppppk...',
     '...kppk....',
     '...kkkk....',
-], {'l': G[8], 'k': K, 'p': G[5]}, 6, 152)
+], {'l': G[8], 'k': K, 'p': G[5]}, 4, FY + 20)
 stack = []
-for bx, by in ((294, 160), (300, 146), (276, 164)):
+for bx, by in ((448, FY + 22), (454, FY + 8), (462, FY + 22)):
     stack += box_sprite(bx, by)
 
-# ---------- walker carrying a box ----------
+# ---------- walkers ----------
 walker_body = robot_body(None) + robot_head('ey e4')
 legsA = g([(K, 5, 24, 3, 4), (K, 10, 24, 3, 3), (G[6], 4, 27, 4, 1), (G[6], 10, 26, 4, 1)], cls='la1')
 legsB = g([(K, 5, 24, 3, 3), (K, 10, 24, 3, 4), (G[6], 4, 26, 4, 1), (G[6], 10, 27, 4, 1)], cls='la2')
 carry = g(box_sprite(1, 12) + [(K, 0, 17, 2, 4), (K, 15, 17, 2, 4), (G[11], 0, 20, 2, 2), (G[11], 15, 20, 2, 2)])
-walker = (f"<g class='wk'><g transform='translate(0 148)'>"
+walker = (f"<g class='wk'><g transform='translate(0 {FY + 6})'>"
           f"<g class='wb'>{walker_body}{carry}</g>{legsA}{legsB}</g></g>")
-# second little walker going the other way, no box (sweeping)
 broom = g([(K, -2, 10, 1, 14), (G[8], -4, 24, 5, 3), (G[6], -4, 26, 5, 1)])
-walker2 = (f"<g class='wk2'><g transform='translate(0 150) scale(.82)'>"
+walker2 = (f"<g class='wk2'><g transform='translate(0 {FY + 8}) scale(.82)'>"
            f"<g class='wb'>{robot_body(None)}{robot_head('ey e2')}{broom}</g>{legsA}{legsB}</g></g>")
 
 # ---------- CRT roll band ----------
@@ -306,15 +328,16 @@ defs.append("<linearGradient id='rb' x1='0' y1='0' x2='0' y2='1'>"
             f"<stop offset='0' stop-color='{G[13]}' stop-opacity='0'/>"
             f"<stop offset='.5' stop-color='{G[13]}' stop-opacity='.05'/>"
             f"<stop offset='1' stop-color='{G[13]}' stop-opacity='0'/></linearGradient>")
-roll = "<g class='rl'><path fill='url(%23rb)' d='M0 -40h320v40H0z'/></g>"
+roll = f"<g class='rl'><path fill='url(%23rb)' d='M0 -40h{W}v40H0z'/></g>"
 
 # ---------- order ----------
+LT = f"<g transform='translate(0 {DY})'>"
 scene = ''.join(parts)
-scene += stamper_housing + stamper_lights
+scene += LT + stamper_housing + stamper_lights
 scene += w_scan + w_tape + w_lever + belt_back
 scene += stamper_head
-scene += bin_back + boxes + beam + belt_top + gears + chute + lever
-scene += g(floor) + floor_lines + g(haz) + belt_front + bin_front
+scene += bin_back + boxes + beam + belt_top + gears + chute + lever + '</g>'
+scene += g(floor) + floor_lines + g(haz) + LT + belt_front + bin_front + '</g>'
 scene += g(stack) + g(plant) + walker2 + walker + roll
 
 # ---------- animation css (inside svg) ----------
@@ -323,20 +346,22 @@ css = """
 *{animation-timing-function:ease-in-out}
 .bx{animation:bx 20s infinite}
 @keyframes bx{
-0%{transform:translate(24px,-36px);opacity:1;animation-timing-function:ease-in}
-3%{transform:translate(24px,0)}3.8%{transform:translate(24px,-3px)}4.6%{transform:translate(24px,0)}
-7.5%{transform:translate(24px,0)}20%{transform:translate(88px,0)}
-27.5%{transform:translate(88px,0)}40%{transform:translate(152px,0)}
-47.5%{transform:translate(152px,0)}60%{transform:translate(216px,0)}
-67.5%{transform:translate(216px,0)}80%{transform:translate(280px,0)}
-82%{transform:translate(281px,0);animation-timing-function:ease-in}
-86%{transform:translate(292px,30px);opacity:1}86.5%,100%{transform:translate(292px,30px);opacity:0}}
+0%{transform:translate(36px,-36px);opacity:1;animation-timing-function:ease-in}
+3%{transform:translate(36px,0)}3.8%{transform:translate(36px,-3px)}4.6%{transform:translate(36px,0)}
+7.5%{transform:translate(36px,0)}20%{transform:translate(92px,0)}
+27.5%{transform:translate(92px,0)}40%{transform:translate(220px,0)}
+47.5%{transform:translate(220px,0)}60%{transform:translate(348px,0)}
+67.5%{transform:translate(348px,0)}80%{transform:translate(404px,0)}
+87.5%{transform:translate(404px,0)}89.5%{transform:translate(406px,0);animation-timing-function:ease-in}
+93%{transform:translate(416px,30px);opacity:1}93.5%,100%{transform:translate(416px,30px);opacity:0}}
 .lab,.tap{opacity:0;animation:lab 20s step-end infinite}
 .tap{animation-name:tap}
-@keyframes lab{0%,41.6%{opacity:0}41.7%,99.9%{opacity:1}}
-@keyframes tap{0%,62%{opacity:0}62.1%,99.9%{opacity:1}}
-.bt{animation:bt 4s infinite}
-@keyframes bt{0%,37.5%{transform:translateX(0)}100%{transform:translateX(64px)}}
+@keyframes lab{0%,62.1%{opacity:0}62.2%,99.9%{opacity:1}}
+@keyframes tap{0%,83.4%{opacity:0}83.5%,99.9%{opacity:1}}
+.bt{animation:bt 4s infinite}.b128{animation-name:bu}
+@keyframes bt{0%,37.5%{transform:translateX(0)}100%{transform:translateX(56px)}}
+@keyframes bu{0%,37.5%{transform:translateX(0)}100%{transform:translateX(128px)}}
+.gr,.lv{transform-box:fill-box;transform-origin:center}.lv{transform-origin:50% 100%}
 .gr{animation:gr 4s infinite}
 @keyframes gr{0%,37.5%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 .pr{animation:pr 4s infinite}
@@ -362,9 +387,9 @@ css = """
 .an{animation:an 2.4s steps(1) infinite}@keyframes an{60%{opacity:.3}}
 .la{animation:pl 1.2s steps(1) infinite}.lb{animation:pl 1.2s steps(1) infinite -.6s}
 .bob{animation:bob 2s steps(1) infinite}@keyframes bob{50%{transform:translateY(1px)}}
-.wk{animation:wk 46s linear infinite}@keyframes wk{from{transform:translateX(-30px)}to{transform:translateX(340px)}}
+.wk{animation:wk 46s linear infinite}@keyframes wk{from{transform:translateX(-30px)}to{transform:translateX(500px)}}
 .wk2{animation:wk2 64s linear infinite -20s}
-@keyframes wk2{from{transform:translateX(350px) scaleX(-1)}to{transform:translateX(-40px) scaleX(-1)}}
+@keyframes wk2{from{transform:translateX(510px) scaleX(-1)}to{transform:translateX(-40px) scaleX(-1)}}
 .wb{animation:bob .5s steps(1) infinite}
 .la1{animation:la1 .5s steps(1) infinite}.la2{animation:la1 .5s steps(1) infinite -.25s}
 @keyframes la1{50%{opacity:0}}
@@ -375,18 +400,18 @@ css = """
 .stm{animation:stm 3.6s ease-out infinite}.t1{animation-delay:-1.2s}.t2{animation-delay:-2.4s}
 @keyframes stm{0%{transform:translate(0,0) scale(.6);opacity:.7}100%{transform:translate(-4px,-20px) scale(2.6);opacity:0}}
 .lc{animation:lc 7s steps(1) infinite}@keyframes lc{0%,100%{opacity:.05}41%{opacity:.035}43%{opacity:.055}}
-.mh{transform-origin:204.5px 40.5px;animation:rot 60s steps(60) infinite}
-.hh{transform-origin:204.5px 40.5px;animation:rot 720s linear infinite}
+.mh{transform-origin:240.5px 112.5px;animation:rot 60s steps(60) infinite}
+.hh{transform-origin:240.5px 112.5px;animation:rot 720s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
-.rl{animation:rl 11s linear infinite}@keyframes rl{to{transform:translateY(220px)}}
+.rl{animation:rl 11s linear infinite}@keyframes rl{to{transform:translateY(360px)}}
 .sg{animation:sg 9s steps(1) infinite}@keyframes sg{0%,100%{opacity:1}61%{opacity:.55}62%{opacity:1}64%{opacity:.6}65%{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}
 """
 css = ' '.join(l.strip() for l in css.strip().splitlines())
 
-svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180' preserveAspectRatio='xMidYMax slice' "
+svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
        f"shape-rendering='crispEdges'><style>{css}</style><defs>{''.join(defs)}</defs>"
-       f"<path fill='{G[3]}' d='M0 0h320v180H0z'/>{scene}</svg>")
+       f"<path fill='{G[3]}' d='M0 0h480v320H0z'/>{scene}</svg>")
 
 
 def enc(s):
@@ -422,14 +447,17 @@ m_type = 'data:image/svg+xml,' + enc(mascot(True))
 SCAN = "repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)"
 VIG = "radial-gradient(ellipse 90% 85% at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%)"
 DIM = "linear-gradient(rgba(10,11,12,.18),rgba(10,11,12,.18))"
+BAND = ("linear-gradient(90deg,transparent calc(50% - 560px),rgba(12,13,14,.38) calc(50% - 360px),"
+        "rgba(12,13,14,.38) calc(50% + 360px),transparent calc(50% + 560px))")
+WK = ",".join(f'[data-timeline-row-kind="{k}"]>*' for k in ("work","work-live","work-toggle","thinking","working"))
 theme_css = f"""
-[data-workspace-area="conversation"]{{background:{SCAN},{VIG},{DIM},url("{data_uri}") center bottom/cover no-repeat #25272a!important}}
+[data-workspace-area="conversation"]{{background:{SCAN},{VIG},{BAND},{DIM},url("{data_uri}") center bottom/cover no-repeat #25272a!important}}
 [data-workspace-area="conversation"] .messages-timeline-scroll,[data-workspace-area="conversation"]>div,[data-chat-header]{{background:transparent!important}}
 [data-workspace-area="conversation"] *,[data-workspace-area="conversation"] *::before,[data-workspace-area="conversation"] *::after{{backdrop-filter:none!important}}
 [data-chat-header]{{border-bottom:2px solid #0c0d0e!important;background:linear-gradient(#1c1e20,#1c1e20cc)!important}}
 [data-user-message-bubble]{{background:#2f3235!important;color:#f0f0ec!important;border:0!important;border-radius:0!important;padding:10px 14px!important;box-shadow:0 -2px #a3a5a7,0 2px #a3a5a7,-2px 0 #a3a5a7,2px 0 #a3a5a7,4px 4px 0 2px rgba(0,0,0,.45)!important;margin:2px 4px 6px!important}}
 [data-message-role="assistant"] .chat-markdown{{background:rgba(20,21,23,.94)!important;border:0!important;border-radius:0!important;padding:10px 14px!important;box-shadow:0 -2px #5c5f63,0 2px #5c5f63,-2px 0 #5c5f63,2px 0 #5c5f63,4px 4px 0 2px rgba(0,0,0,.45)!important;margin:2px 4px 6px!important}}
-[data-timeline-row-kind="work"]>*{{background-color:rgba(20,21,23,.9)!important;border-radius:0!important}}
+{WK}{{background:rgba(20,21,23,.9)!important;border:0!important;border-radius:0!important;padding:5px 12px!important;margin:0 4px 8px!important;box-shadow:0 -2px #4a4d51,0 2px #4a4d51,-2px 0 #4a4d51,2px 0 #4a4d51,4px 4px 0 2px rgba(0,0,0,.4)!important}}
 .chat-markdown-codeblock{{background:#0c0d0e!important;border:1px solid #3b3e42!important;border-radius:0!important}}
 .chat-markdown a{{color:#dcdddb!important;text-decoration:underline dotted!important}}
 [data-slot="sidebar-inner"]{{background:{SCAN},linear-gradient(#1c1e20,#141517)!important;border-right:2px solid #0c0d0e!important}}
@@ -437,12 +465,12 @@ theme_css = f"""
 [data-thread-item]:hover{{background:rgba(220,221,219,.07)!important}}
 [data-thread-item][data-active=true],[data-thread-item][aria-current]{{box-shadow:inset 3px 0 #c1c3c3!important}}
 [data-slot="project-monogram"]{{image-rendering:pixelated;border-radius:0!important}}
-[data-slot="composer-host"]{{position:relative;overflow:visible!important;margin-top:30px!important;background:#141517!important;border-radius:0!important;border:0!important;box-shadow:0 -2px #888b8e,0 2px #888b8e,-2px 0 #888b8e,2px 0 #888b8e,5px 5px 0 2px rgba(0,0,0,.5)!important}}
+[data-slot="composer-host"]{{position:relative;overflow:visible!important;margin-top:44px!important;background:#141517!important;border-radius:0!important;border:0!important;box-shadow:0 -2px #888b8e,0 2px #888b8e,-2px 0 #888b8e,2px 0 #888b8e,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-host"]:focus-within{{box-shadow:0 -2px #dcdddb,0 2px #dcdddb,-2px 0 #dcdddb,2px 0 #dcdddb,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-shell"]::before{{display:none!important}}
 [data-slot="composer-host"] .composer-tiptap{{overflow:visible!important;max-height:none!important}}
-[data-slot="composer-host"] .composer-tiptap p:last-child::after{{content:"";position:absolute;top:-33px;width:22px;height:35px;margin-left:2px;pointer-events:none;z-index:5;image-rendering:pixelated;background:url("{m_idle}") 0 0/22px 35px no-repeat}}
-[data-slot="composer-host"]:focus-within .composer-tiptap p:last-child::after{{background-image:url("{m_type}")}}
+[data-slot="composer-host"]::before{{content:""!important;display:block!important;position:absolute!important;left:28px!important;top:-46px!important;right:auto!important;bottom:auto!important;width:34px!important;height:54px!important;pointer-events:none!important;z-index:-1!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;image-rendering:pixelated;background:url("{m_idle}") 0 0/34px 54px no-repeat!important}}
+[data-slot="composer-host"]:focus-within::before{{background-image:url("{m_type}")!important}}
 [data-slot="button"],[data-slot="input"],[data-slot="select-trigger"],[data-slot="dialog-popup"],[data-slot="popover-popup"],[data-slot="menu-popup"],[data-slot="tooltip-popup"],[data-thread-details-card]{{border-radius:0!important}}
 [data-slot="dialog-popup"],[data-slot="popover-popup"],[data-slot="menu-popup"]{{box-shadow:0 0 0 2px #5c5f63,6px 6px 0 rgba(0,0,0,.5)!important}}
 [data-slot="tooltip-popup"]{{background:#0c0d0e!important;color:#f0f0ec!important;box-shadow:0 0 0 1px #888b8e!important}}
