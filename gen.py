@@ -504,7 +504,7 @@ colors = {
     "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#f0f0ec",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
-theme = {"version": 1, "name": "Agent Works", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
+theme = {"id": "agent-works", "version": 1, "name": "Agent Works", "appearance": "dark", "canvas": "#1c1e20", "accent": "#c1c3c3",
          "colors": colors, "css": theme_css}
 json.dump(theme, open(sys.argv[1] + '/agent-works.json', 'w'))
 print('css chars:', len(theme_css), 'svg uri:', len(data_uri))

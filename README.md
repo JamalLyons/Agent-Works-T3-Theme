@@ -16,11 +16,11 @@ A calm, animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3
 
 ## Install
 
-```sh
-cp agent-works.json ~/.t3/userdata/themes/agent-works.json
-```
+1. Download [`agent-works.json`](agent-works.json).
+2. In T3 Code, open **Settings → Appearance** and click **Add theme**.
+3. Choose the file, then select **Agent Works**.
 
-Then pick **Agent Works** in T3 Code's appearance settings.
+It installs as a custom theme, so you can export or remove it from the same screen. The built-in theme editor may not keep the theme's custom CSS, which holds the whole scene, so make changes in `gen.py` instead.
 
 ## How it works
 
@@ -32,4 +32,4 @@ The scene is a 480×320 pixel-art SVG with its CSS keyframe animations inside it
 python3 gen.py out   # writes out/agent-works.json and out/factory.svg
 ```
 
-To install your rebuilt version, add `"id": "agent-works"` to `out/agent-works.json` and copy it into `~/.t3/userdata/themes/`.
+To use a rebuilt version, import `out/agent-works.json` with **Add theme**. It has the same `agent-works` id, so T3 Code offers to update the installed theme.
