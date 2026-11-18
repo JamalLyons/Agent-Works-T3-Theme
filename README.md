@@ -14,6 +14,9 @@ An animated pixel-art factory for [T3 Code](https://github.com/pingdotgg/t3code)
 - **The factory turns on while the agent works.** The amber lamps and the **AGENT WORKS** sign flicker on, chase lights run along the belt and the LEDs blink. When the turn ends, everything goes dark again.
 - **Rows and composer.** The live work row gets an amber border with a moving belt underline, and the composer border turns amber.
 - **CRT power-on.** A thin line opens into the scene when a chat loads.
+- **The sidebar.** The factory continues behind the thread list, lined up with the chat area so the belt runs straight across the window. While any agent works, an amber chase rail runs down the sidebar's edge, the "Working" shelf gets a blinking lamp, and project icons get a thin amber outline. The open thread gets a soft steel highlight.
+- **Line on hold.** When an agent waits for your approval or an answer, the lamps blink slowly, hazard tape runs around the request, the sidebar rail turns into a striped hold bar, and the composer glows amber until you respond.
+- **The control room.** The command palette, menus, toasts, model picker, plan cards, file drop zone, terminal drawer and settings page all match the factory: square steel frames, soft steel selection highlights, an amber caret, and a striped loading dock when you drag files in.
 - **The composer mascot.** A small robot sits on the composer's top edge and follows the end of your text. When you click in, an amber sweep crosses the top edge, and the robot's face lights up while it types.
 - **Streaming replies** end with a blinking amber block cursor.
 - **Reduced motion.** When the system's "reduce motion" setting is on, all animation stops.
@@ -51,7 +54,7 @@ T3 Code limits a theme's CSS to 50,000 characters, but it also serves an image f
 | File | What it does |
 |---|---|
 | `gen.py` | Builds the source SVG scene (sprites, layout, animation timing), the composer mascot, the UI styling and the color roles. Writes `out/agent-works.json`, `out/factory.svg`, `out/lights.svg` and `out/anchors.json`. |
-| `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row and composer effects, and the streaming cursor. |
+| `fx.py` | Holds the reactive layer: the light overlay, the CRT power-on, the work-row, composer and sidebar effects, and the streaming cursor. |
 | `tests/` | Quick checks of the build (CSS limit, light alignment, 20-second loop). Run with `python3 -m unittest discover -s tests`. |
 | `render/render.sh` | Renders `out/factory.svg` in headless Brave with bloom, light shafts, dust and depth. It captures 300 frames and encodes `media/agent-works.webp`. Takes about 6.5 minutes and needs Brave, `img2webp` and Node. |
 | `render/preview.sh` | Builds `media/preview.gif` from the rendered frames plus the light overlay. Needs `ffmpeg`. |

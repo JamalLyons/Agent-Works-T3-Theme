@@ -12,6 +12,15 @@ A2 = '#ffe2a8'    # hot filament
 CONV = '[data-workspace-area="conversation"]'
 LIVE = '[data-timeline-row-kind="working"],[data-timeline-row-kind="work-live"]'
 ON = f'{CONV}:has({LIVE})'
+SB = '[data-slot="sidebar-inner"]'
+ROW = '[data-sidebar-row]'
+CUR = f'{ROW}[aria-current="page"]'
+SHELF = '[data-testid="sidebar-working-header"]'      # the sidebar's "Working" shelf; present while any thread runs
+BUSY = (f'body:has({LIVE})', f'body:has({SHELF})')     # an agent is working somewhere
+
+def busy(sel):
+    """`sel` scoped to 'an agent is working', for both signals."""
+    return ','.join(f'{b} {sel}' for b in BUSY)
 
 
 def overlay(an, g, text, R):
@@ -55,18 +64,59 @@ def overlay(an, g, text, R):
             f"shape-rendering='crispEdges'><style>{st}</style><defs>{defs}</defs>{s}</svg>")
 
 
+SEL = 'rgba(220,221,219,.1)'   # selection: neutral steel, readable on any monogram color
+SEL_SH = 'inset 0 0 0 1px rgba(220,221,219,.14),0 0 14px rgba(0,0,0,.35)'
+WAIT = '[data-approval-detail],[data-pending-user-input-toggle]'   # approval or question pending: the line is on hold
+WAITS = tuple(f'body:has({w})' for w in WAIT.split(','))
+
+def wait_css(HZ):
+    """Hold state, plus the static control-panel surfaces (palette, menus, toasts, drop dock, plan, terminal, settings)."""
+    hold = ','.join(f'{w} {CONV}::before' for w in WAITS)
+    rail = ','.join(f'{w} [data-slot="sidebar-inner"]::after' for w in WAITS)
+    comp = ','.join(f'{w} [data-slot="composer-host"]' for w in WAITS)
+    item = ','.join(f'[data-slot="{k}"][data-highlighted]' for k in ('menu-item', 'command-item', 'select-item', 'combobox-item'))
+    out = f"""
+{hold}{{opacity:1;animation:aw-hold 1.6s steps(1) infinite}}
+@keyframes aw-hold{{50%{{opacity:.3}}}}
+{rail}{{opacity:1;animation:none;background:{HZ} right 0 top 0/3px 100% no-repeat,linear-gradient(270deg,rgba(255,154,46,.28),transparent)}}
+{comp}{{box-shadow:0 -2px {A},0 2px {A},-2px 0 {A},2px 0 {A},0 0 26px rgba(255,154,46,.35),5px 5px 0 2px rgba(0,0,0,.5)!important;animation:aw-hold 1.6s steps(1) infinite}}
+[data-timeline-row-kind]>:has([data-approval-detail]){{position:relative;box-shadow:0 0 22px rgba(255,154,46,.3),4px 4px 0 2px rgba(0,0,0,.4)!important}}
+[data-timeline-row-kind]>:has([data-approval-detail])::before{{content:"";position:absolute;inset:-3px;padding:3px;pointer-events:none;background:{HZ};background-size:17px 17px;
+mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:aw-tape 1.2s linear infinite}}
+@keyframes aw-tape{{to{{background-position:17px 0}}}}
+[data-command-palette]{{border-radius:0!important;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)!important;
+box-shadow:0 -3px {A1},0 0 0 2px #5c5f63,8px 8px 0 rgba(0,0,0,.55),0 0 40px rgba(255,154,46,.12)!important}}
+[data-command-palette] input,.composer-tiptap{{caret-color:{A}}}
+{item}{{background:{SEL}!important;box-shadow:{SEL_SH}!important;border-radius:0!important}}
+[data-slot="toast-popup"]{{border-radius:0!important;box-shadow:inset 3px 0 {A1},0 0 0 2px #4a4d51,5px 5px 0 rgba(0,0,0,.5)!important}}
+[data-chat-workspace-drop-overlay="true"]{{border-radius:0!important;background:repeating-linear-gradient(-45deg,rgba(255,181,71,.12) 0 14px,rgba(12,13,14,.55) 14px 28px)!important;
+box-shadow:inset 0 0 0 3px {A},inset 0 0 60px rgba(255,154,46,.25)!important;color:{A2}!important}}
+[data-timeline-row-kind="proposed-plan"]>*{{background:linear-gradient(rgba(255,181,71,.06) 1px,transparent 1px) 0 0/16px 16px,
+linear-gradient(90deg,rgba(255,181,71,.06) 1px,transparent 1px) 0 0/16px 16px,rgba(20,21,23,.94)!important;box-shadow:0 -2px {A1},0 2px #5c5f63,-2px 0 #5c5f63,2px 0 #5c5f63,4px 4px 0 2px rgba(0,0,0,.45)!important}}
+[data-model-picker-selected-indicator="true"]{{color:{A}!important;filter:drop-shadow(0 0 3px {A1})}}
+[data-thread-terminal-drawer]{{border-top:2px solid #4a4d51!important;box-shadow:0 -2px 0 #0c0d0e,0 -8px 18px rgba(0,0,0,.35)!important}}
+[data-slot="skeleton"]{{border-radius:0!important;background:#2f3235!important}}
+[data-settings-page-scroll]{{background:linear-gradient(rgba(20,21,23,.9),rgba(20,21,23,.97)),var(--theme-background-image) center bottom/cover no-repeat!important}}
+[data-slot="settings-group"]{{border-radius:0!important}}
+"""
+    return ''.join(l.strip() for l in out.strip().splitlines())
+
 def css(an, g, text, R, enc):
     """Reactive CSS. enc: gen.enc, the data: URI escaper."""
     over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R))
 
     rm = '@media (prefers-reduced-motion:reduce)'
+    HZ = f'repeating-linear-gradient(-45deg,{A} 0 6px,#141517 6px 12px)'   # hazard tape
+    WAIT_CSS = wait_css(HZ)
+    HOLD_ANIM = f'{",".join(f"{w} {CONV}::before" for w in WAITS)},{",".join(f"{w} [data-slot=composer-host]" for w in WAITS)},[data-timeline-row-kind]>:has([data-approval-detail])::before'
+    SCAN_SB = 'repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)'
     out = f"""
 {CONV}{{position:relative;isolation:isolate;animation:aw-on .7s cubic-bezier(.2,.7,.2,1) both}}
 @keyframes aw-on{{0%{{clip-path:inset(50% 0 50% 0);filter:brightness(4) contrast(2)}}
 18%{{clip-path:inset(49.6% 8% 49.6% 8%);filter:brightness(5)}}
 45%{{clip-path:inset(0 0 0 0);filter:brightness(1.8)}}100%{{clip-path:inset(0 0 0 0);filter:none}}}}
 {CONV}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;mix-blend-mode:screen;opacity:0;
-background:url("{over}") center bottom/cover no-repeat;transition:opacity 1.2s ease}}
+background:url("{over}") center bottom/cover no-repeat fixed;transition:opacity 1.2s ease}}
 {CONV}::after{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.35;transition:opacity 1.2s ease;
 background:radial-gradient(ellipse 70% 60% at 50% 40%,transparent,rgba(0,0,0,.6))}}
 {ON}::before{{opacity:1;animation:aw-flick 1.1s steps(1) both}}
@@ -84,6 +134,23 @@ background:{A};box-shadow:0 0 8px {A1};animation:aw-cur 1s steps(1) infinite}}
 background-size:300% 2px!important;background-repeat:no-repeat!important;background-position:120% 0;animation:aw-sweep .9s ease-out both}}
 @keyframes aw-sweep{{from{{background-position:120% 0}}to{{background-position:-20% 0}}}}
 body:has({LIVE}) [data-slot="composer-host"]{{box-shadow:0 -2px {A1},0 2px {A1},-2px 0 {A1},2px 0 {A1},0 0 22px rgba(255,154,46,.22),5px 5px 0 2px rgba(0,0,0,.5)!important}}
+{SB}{{position:relative;isolation:isolate}}
+{SB}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+background:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--theme-background-image) center bottom/cover no-repeat fixed}}
+{SB}{{overflow:hidden}}
+{SB}::after{{content:"";position:absolute;top:-16px;bottom:0;right:0;width:48px;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
+background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) right 0 top 0/2px 16px repeat-y,linear-gradient(270deg,rgba(255,154,46,.2),transparent)}}
+{busy(f'{SB}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail .8s linear 1.1s infinite}}
+@keyframes aw-rail{{to{{transform:translateY(16px)}}}}
+[data-testid="sidebar-working-shelf-toggle"]{{color:{A}!important;text-shadow:0 0 6px rgba(255,154,46,.6)}}
+[data-testid="sidebar-working-shelf-toggle"]::before{{content:"";flex:none;width:6px;height:6px;background:{A2};box-shadow:0 0 0 1px {A1},0 0 8px {A};animation:aw-lamp 1.6s steps(1) infinite}}
+@keyframes aw-lamp{{50%{{opacity:.35}}}}
+{ROW}{{border-radius:0!important;transition:background .25s ease}}
+{ROW}:hover{{background:rgba(220,221,219,.06)!important}}
+{CUR}{{background:{SEL}!important;box-shadow:{SEL_SH}!important}}
+{busy(f'{SB} [data-slot="project-monogram"]')}{{outline:1px solid rgba(255,181,71,.7);outline-offset:1px}}
+{WAIT_CSS}
+{rm}{{{SB}::after,[data-testid="sidebar-working-shelf-toggle"]::before,{HOLD_ANIM}{{animation:none!important}}{ROW}{{transition:none!important}}}}
 {rm}{{{CONV},{CONV}::before,[data-slot="composer-host"],[data-timeline-row-kind]>*::after,[data-streaming]>*::after{{animation:none!important}}}}
 """
     return ''.join(l.strip() for l in out.strip().splitlines())

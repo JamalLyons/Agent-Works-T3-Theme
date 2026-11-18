@@ -533,7 +533,7 @@ BAND = ("linear-gradient(90deg,transparent calc(50% - 560px),rgba(12,13,14,.38) 
         "rgba(12,13,14,.38) calc(50% + 360px),transparent calc(50% + 560px))")
 WK = ",".join(f'[data-timeline-row-kind="{k}"]>*' for k in ("work","work-live","work-toggle","thinking","working"))
 theme_css = f"""
-[data-workspace-area="conversation"]{{background:@@BG@@ center bottom/cover no-repeat #25272a!important}}
+[data-workspace-area="conversation"]{{background:@@BG@@ center bottom/cover no-repeat #25272a!important;background-attachment:scroll,fixed!important}}
 [data-workspace-area="conversation"] .messages-timeline-scroll,[data-workspace-area="conversation"]>div,[data-chat-header]{{background:transparent!important}}
 [data-workspace-area="conversation"] *,[data-workspace-area="conversation"] *::before,[data-workspace-area="conversation"] *::after{{backdrop-filter:none!important}}
 [data-chat-header]{{border-bottom:2px solid #0c0d0e!important;background:linear-gradient(#1c1e20,#1c1e20cc)!important}}
@@ -544,8 +544,6 @@ theme_css = f"""
 .chat-markdown a{{color:#dcdddb!important;text-decoration:underline dotted!important}}
 [data-slot="sidebar-inner"]{{background:{SCAN},linear-gradient(#1c1e20,#141517)!important;border-right:2px solid #0c0d0e!important}}
 [data-thread-item]{{border-radius:0!important}}
-[data-thread-item]:hover{{background:rgba(220,221,219,.07)!important}}
-[data-thread-item][data-active=true],[data-thread-item][aria-current]{{box-shadow:inset 3px 0 #c1c3c3!important}}
 [data-slot="project-monogram"]{{image-rendering:pixelated;border-radius:0!important}}
 [data-slot="composer-host"]{{position:relative;overflow:visible!important;margin-top:44px!important;background:#141517!important;border-radius:0!important;border:0!important;box-shadow:0 -2px #888b8e,0 2px #888b8e,-2px 0 #888b8e,2px 0 #888b8e,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-host"]:focus-within{{box-shadow:0 -2px #dcdddb,0 2px #dcdddb,-2px 0 #dcdddb,2px 0 #dcdddb,5px 5px 0 2px rgba(0,0,0,.5)!important}}
@@ -586,7 +584,7 @@ colors = {
     "searchMatchActiveForeground": "#0c0d0e", "sidebar": "#17181a", "sidebarForeground": "#dcdddb",
     "sidebarMutedForeground": "#888b8e", "sidebarControlSurface": "#25272a", "sidebarRowHover": "#25272a",
     "sidebarRowActive": "#2f3235", "sidebarRowSelected": "#3b3e42", "sidebarBorder": "#0c0d0e",
-    "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#f0f0ec",
+    "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#ffb547",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
 TID = 'agent-works'
