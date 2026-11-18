@@ -101,6 +101,41 @@ linear-gradient(90deg,rgba(255,181,71,.06) 1px,transparent 1px) 0 0/16px 16px,rg
 """
     return ''.join(l.strip() for l in out.strip().splitlines())
 
+PANEL = '[data-workspace-area="panel"]'   # the right panel (browser, terminal, files, diff, PRs, ...)
+CARD = '[data-thread-details-card]'   # the thread details card (branch, PR, changes), inline or as a popover
+
+def details_css():
+    """Right panel as a lit control wall, and the thread details card as a steel control panel; an amber chase on its top edge while an agent works."""
+    out = f"""
+{CARD}{{position:relative;border-radius:0!important;border:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px),linear-gradient(#1f2123,#17181a)!important;
+box-shadow:0 -2px #6a6d71,0 0 0 2px #4a4d51,inset 0 1px rgba(220,221,219,.06),6px 6px 0 rgba(0,0,0,.5)!important}}
+{CARD}::before{{content:"";position:absolute;left:0;right:0;top:-2px;height:2px;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s ease;
+background:repeating-linear-gradient(90deg,{A2} 0 6px,transparent 6px 16px) 0 0/32px 2px}}
+{busy(f'{CARD}::before')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-chase .8s linear 1.1s infinite}}
+@keyframes aw-chase{{to{{background-position:32px 0}}}}
+{CARD} [data-slot="separator"],{CARD} [role="separator"]{{height:2px!important;border:0!important;background:repeating-linear-gradient(90deg,#55585c 0 2px,transparent 2px 10px),#26282b!important}}
+{CARD} [data-slot="button"]{{border-radius:0!important}}
+{CARD} :is(a,button,[role="button"],[data-slot="button"]):hover{{background-color:{SEL}!important}}
+{CARD} [data-pull-request-action-pending] [data-slot="button"]{{background:#2a2c2f!important;box-shadow:0 0 0 1px #5c5f63,2px 2px 0 rgba(0,0,0,.5)!important;color:#dcdddb!important}}
+{CARD} [data-pull-request-action-pending] [data-slot="button"]:hover{{box-shadow:0 0 0 1px {A},0 0 10px rgba(255,154,46,.35),2px 2px 0 rgba(0,0,0,.5)!important;color:{A2}!important}}
+{CARD} [data-pull-request-action-pending="true"] [data-slot="button"]{{color:{A}!important;box-shadow:0 0 0 1px {A1},0 0 12px rgba(255,154,46,.4)!important;animation:aw-lamp 1.2s steps(1) infinite}}
+{PANEL}{{position:relative;isolation:isolate;border-left:2px solid #0c0d0e!important;box-shadow:inset 2px 0 #3a3d40!important}}
+{PANEL}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(rgba(17,18,20,.86),rgba(17,18,20,.93)),var(--theme-background-image) center bottom/cover no-repeat fixed}}
+{PANEL}::after{{content:"";position:absolute;top:-16px;bottom:0;left:0;width:2px;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
+background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px)}}
+{busy(f'{PANEL}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail .8s linear 1.1s infinite}}
+{PANEL} [data-right-panel-tabbar]{{background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px),linear-gradient(#232527,#1a1b1d)!important;
+border-bottom:2px solid #0c0d0e!important;box-shadow:0 1px #3a3d40!important}}
+{PANEL} [data-surface-subheader]{{background:rgba(20,21,23,.9)!important;border-bottom:2px solid #2a2c2f!important}}
+{PANEL} [data-right-panel-surface-content]{{background:transparent!important}}
+{PANEL} :is([data-slot="toggle"],[data-slot="toggle-group"],[data-slot="badge"],[data-slot="kbd"],[data-slot="tabs-tab"],[role="tab"],[data-slot="input"],[data-slot="collapsible"]){{border-radius:0!important}}
+{PANEL} [role="tab"][aria-selected="true"],{PANEL} [data-slot="toggle"][data-pressed]{{background:{SEL}!important;box-shadow:inset 0 -2px {A}!important}}
+{PANEL} :is([data-slot="table-row"],[data-changed-file-row]):hover{{background:rgba(220,221,219,.06)!important}}
+"""
+    return ''.join(l.strip() for l in out.strip().splitlines())
+
 def css(an, g, text, R, enc):
     """Reactive CSS. enc: gen.enc, the data: URI escaper."""
     over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R))
@@ -150,7 +185,8 @@ background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) rig
 {CUR}{{background:{SEL}!important;box-shadow:{SEL_SH}!important}}
 {busy(f'{SB} [data-slot="project-monogram"]')}{{outline:1px solid rgba(255,181,71,.7);outline-offset:1px}}
 {WAIT_CSS}
-{rm}{{{SB}::after,[data-testid="sidebar-working-shelf-toggle"]::before,{HOLD_ANIM}{{animation:none!important}}{ROW}{{transition:none!important}}}}
+{details_css()}
+{rm}{{{SB}::after,{PANEL}::after,{CARD}::before,{CARD} [data-pull-request-action-pending] [data-slot=button],[data-testid="sidebar-working-shelf-toggle"]::before,{HOLD_ANIM}{{animation:none!important}}{ROW}{{transition:none!important}}}}
 {rm}{{{CONV},{CONV}::before,[data-slot="composer-host"],[data-timeline-row-kind]>*::after,[data-streaming]>*::after{{animation:none!important}}}}
 """
     return ''.join(l.strip() for l in out.strip().splitlines())
