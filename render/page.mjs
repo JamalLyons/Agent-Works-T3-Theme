@@ -46,11 +46,5 @@ html,body{margin:0;background:#0c0d0e;overflow:hidden}
 </div>
 <script>window.AW_SCALE=${S};window.AW_ANCHORS=${anchors};</script>
 <script>${fs.readFileSync(new URL('./fx.js', import.meta.url), 'utf8')}</script>
-<script>
-window.AW_seek = (t) => {
-  for (const a of document.getAnimations()) { a.pause(); a.currentTime = t * 1000; }
-  window.AW_drawFx(t);
-};
-window.AW_seek(0);
-</script></body></html>`;
+<script>window.AW_drawFx(0);</script></body></html>`;
 fs.writeFileSync(outPath, html);
