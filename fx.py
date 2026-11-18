@@ -64,6 +64,8 @@ def overlay(an, g, text, R):
             f"shape-rendering='crispEdges'><style>{st}</style><defs>{defs}</defs>{s}</svg>")
 
 
+SEL = 'rgba(220,221,219,.1)'   # selection: neutral steel, readable on any monogram color
+SEL_SH = 'inset 0 0 0 1px rgba(220,221,219,.14),0 0 14px rgba(0,0,0,.35)'
 WAIT = '[data-approval-detail],[data-pending-user-input-toggle]'   # approval or question pending: the line is on hold
 WAITS = tuple(f'body:has({w})' for w in WAIT.split(','))
 
@@ -85,7 +87,7 @@ mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);ani
 [data-command-palette]{{border-radius:0!important;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)!important;
 box-shadow:0 -3px {A1},0 0 0 2px #5c5f63,8px 8px 0 rgba(0,0,0,.55),0 0 40px rgba(255,154,46,.12)!important}}
 [data-command-palette] input,.composer-tiptap{{caret-color:{A}}}
-{item}{{background:linear-gradient(90deg,rgba(255,181,71,.2),rgba(255,181,71,.04))!important;box-shadow:inset 2px 0 {A}!important;border-radius:0!important}}
+{item}{{background:{SEL}!important;box-shadow:{SEL_SH}!important;border-radius:0!important}}
 [data-slot="toast-popup"]{{border-radius:0!important;box-shadow:inset 3px 0 {A1},0 0 0 2px #4a4d51,5px 5px 0 rgba(0,0,0,.5)!important}}
 [data-chat-workspace-drop-overlay="true"]{{border-radius:0!important;background:repeating-linear-gradient(-45deg,rgba(255,181,71,.12) 0 14px,rgba(12,13,14,.55) 14px 28px)!important;
 box-shadow:inset 0 0 0 3px {A},inset 0 0 60px rgba(255,154,46,.25)!important;color:{A2}!important}}
@@ -114,7 +116,7 @@ def css(an, g, text, R, enc):
 18%{{clip-path:inset(49.6% 8% 49.6% 8%);filter:brightness(5)}}
 45%{{clip-path:inset(0 0 0 0);filter:brightness(1.8)}}100%{{clip-path:inset(0 0 0 0);filter:none}}}}
 {CONV}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;mix-blend-mode:screen;opacity:0;
-background:url("{over}") center bottom/cover no-repeat;transition:opacity 1.2s ease}}
+background:url("{over}") center bottom/cover no-repeat fixed;transition:opacity 1.2s ease}}
 {CONV}::after{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.35;transition:opacity 1.2s ease;
 background:radial-gradient(ellipse 70% 60% at 50% 40%,transparent,rgba(0,0,0,.6))}}
 {ON}::before{{opacity:1;animation:aw-flick 1.1s steps(1) both}}
@@ -133,8 +135,8 @@ background-size:300% 2px!important;background-repeat:no-repeat!important;backgro
 @keyframes aw-sweep{{from{{background-position:120% 0}}to{{background-position:-20% 0}}}}
 body:has({LIVE}) [data-slot="composer-host"]{{box-shadow:0 -2px {A1},0 2px {A1},-2px 0 {A1},2px 0 {A1},0 0 22px rgba(255,154,46,.22),5px 5px 0 2px rgba(0,0,0,.5)!important}}
 {SB}{{position:relative;isolation:isolate}}
-{SB}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.9;filter:blur(1px) saturate(.8);
-background:{SCAN_SB},linear-gradient(rgba(20,21,23,.35),rgba(20,21,23,.55) 45%,rgba(20,21,23,.88) 85%),var(--theme-background-image) 18% 100%/auto 100% no-repeat}}
+{SB}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+background:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--theme-background-image) center bottom/cover no-repeat fixed}}
 {SB}{{overflow:hidden}}
 {SB}::after{{content:"";position:absolute;top:-16px;bottom:0;right:0;width:48px;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
 background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) right 0 top 0/2px 16px repeat-y,linear-gradient(270deg,rgba(255,154,46,.2),transparent)}}
@@ -144,13 +146,11 @@ background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) rig
 [data-testid="sidebar-working-shelf-toggle"]::before{{content:"";flex:none;width:6px;height:6px;background:{A2};box-shadow:0 0 0 1px {A1},0 0 8px {A};animation:aw-lamp 1.6s steps(1) infinite}}
 @keyframes aw-lamp{{50%{{opacity:.35}}}}
 {ROW}{{border-radius:0!important;transition:background .25s ease}}
-{ROW}:hover{{background:linear-gradient(90deg,rgba(255,181,71,.1),rgba(220,221,219,.04) 60%)!important}}
-{CUR}{{position:relative;background:linear-gradient(90deg,rgba(255,181,71,.17),rgba(255,154,46,.04) 70%,transparent)!important;box-shadow:inset 3px 0 {A1}!important}}
-{CUR}::before{{content:"";position:absolute;left:0;top:50%;width:3px;height:8px;margin-top:-4px;background:{A2};box-shadow:0 0 6px {A};pointer-events:none;animation:aw-cur 1.6s steps(1) infinite}}
-[data-slot="project-monogram"]{{filter:drop-shadow(1px 0 0 rgba(255,181,71,.45)) drop-shadow(-1px 0 0 rgba(255,181,71,.45)) drop-shadow(0 1px 0 rgba(255,181,71,.45)) drop-shadow(0 -1px 0 rgba(255,181,71,.45))}}
-{busy('[data-slot="project-monogram"]')}{{filter:drop-shadow(1px 0 0 {A}) drop-shadow(-1px 0 0 {A}) drop-shadow(0 1px 0 {A}) drop-shadow(0 -1px 0 {A}) drop-shadow(0 0 3px {A1})}}
+{ROW}:hover{{background:rgba(220,221,219,.06)!important}}
+{CUR}{{background:{SEL}!important;box-shadow:{SEL_SH}!important}}
+{busy(f'{SB} [data-slot="project-monogram"]')}{{outline:1px solid rgba(255,181,71,.7);outline-offset:1px}}
 {WAIT_CSS}
-{rm}{{{SB}::after,[data-testid="sidebar-working-shelf-toggle"]::before,{CUR}::before,{HOLD_ANIM}{{animation:none!important}}{ROW}{{transition:none!important}}}}
+{rm}{{{SB}::after,[data-testid="sidebar-working-shelf-toggle"]::before,{HOLD_ANIM}{{animation:none!important}}{ROW}{{transition:none!important}}}}
 {rm}{{{CONV},{CONV}::before,[data-slot="composer-host"],[data-timeline-row-kind]>*::after,[data-streaming]>*::after{{animation:none!important}}}}
 """
     return ''.join(l.strip() for l in out.strip().splitlines())

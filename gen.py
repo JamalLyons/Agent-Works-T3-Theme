@@ -533,7 +533,7 @@ BAND = ("linear-gradient(90deg,transparent calc(50% - 560px),rgba(12,13,14,.38) 
         "rgba(12,13,14,.38) calc(50% + 360px),transparent calc(50% + 560px))")
 WK = ",".join(f'[data-timeline-row-kind="{k}"]>*' for k in ("work","work-live","work-toggle","thinking","working"))
 theme_css = f"""
-[data-workspace-area="conversation"]{{background:@@BG@@ center bottom/cover no-repeat #25272a!important}}
+[data-workspace-area="conversation"]{{background:@@BG@@ center bottom/cover no-repeat #25272a!important;background-attachment:scroll,fixed!important}}
 [data-workspace-area="conversation"] .messages-timeline-scroll,[data-workspace-area="conversation"]>div,[data-chat-header]{{background:transparent!important}}
 [data-workspace-area="conversation"] *,[data-workspace-area="conversation"] *::before,[data-workspace-area="conversation"] *::after{{backdrop-filter:none!important}}
 [data-chat-header]{{border-bottom:2px solid #0c0d0e!important;background:linear-gradient(#1c1e20,#1c1e20cc)!important}}
@@ -582,8 +582,8 @@ colors = {
     "messageActionHover": "#dcdddb", "codeBackground": "#0c0d0e", "codeForeground": "#dcdddb",
     "searchMatchBackground": "#4a4d51", "searchMatchForeground": "#f0f0ec", "searchMatchActiveBackground": "#c1c3c3",
     "searchMatchActiveForeground": "#0c0d0e", "sidebar": "#17181a", "sidebarForeground": "#dcdddb",
-    "sidebarMutedForeground": "#888b8e", "sidebarControlSurface": "#25272a", "sidebarRowHover": "#2a2621",
-    "sidebarRowActive": "#33291d", "sidebarRowSelected": "#3d3022", "sidebarBorder": "#0c0d0e",
+    "sidebarMutedForeground": "#888b8e", "sidebarControlSurface": "#25272a", "sidebarRowHover": "#25272a",
+    "sidebarRowActive": "#2f3235", "sidebarRowSelected": "#3b3e42", "sidebarBorder": "#0c0d0e",
     "terminalBackground": "#111214", "terminalForeground": "#d4d5d2", "terminalCursor": "#ffb547",
     "terminalSelection": "#3b3e42", "terminalScrollbar": "#2f3235", "terminalScrollbarHover": "#4a4d51",
 }
