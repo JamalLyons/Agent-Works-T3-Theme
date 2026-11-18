@@ -468,9 +468,9 @@ theme_css = f"""
 [data-slot="composer-host"]{{position:relative;overflow:visible!important;margin-top:44px!important;background:#141517!important;border-radius:0!important;border:0!important;box-shadow:0 -2px #888b8e,0 2px #888b8e,-2px 0 #888b8e,2px 0 #888b8e,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-host"]:focus-within{{box-shadow:0 -2px #dcdddb,0 2px #dcdddb,-2px 0 #dcdddb,2px 0 #dcdddb,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-shell"]::before{{display:none!important}}
-[data-slot="composer-host"] .composer-tiptap{{overflow:visible!important;max-height:none!important}}
-[data-slot="composer-host"]::before{{content:""!important;display:block!important;position:absolute!important;left:28px!important;top:-46px!important;right:auto!important;bottom:auto!important;width:34px!important;height:54px!important;pointer-events:none!important;z-index:-1!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;image-rendering:pixelated;background:url("{m_idle}") 0 0/34px 54px no-repeat!important}}
-[data-slot="composer-host"]:focus-within::before{{background-image:url("{m_type}")!important}}
+[data-slot="composer-host"] .composer-tiptap,[data-slot="composer-host"] .composer-tiptap>*{{position:static!important}}
+[data-slot="composer-host"] .composer-tiptap>:last-child::after{{content:"";position:absolute;top:-50px;width:34px;height:54px;margin-left:2px;pointer-events:none;z-index:5;image-rendering:pixelated;background:url("{m_idle}") 0 0/34px 54px no-repeat}}
+[data-slot="composer-host"]:focus-within .composer-tiptap>:last-child::after{{background-image:url("{m_type}")}}
 [data-slot="button"],[data-slot="input"],[data-slot="select-trigger"],[data-slot="dialog-popup"],[data-slot="popover-popup"],[data-slot="menu-popup"],[data-slot="tooltip-popup"],[data-thread-details-card]{{border-radius:0!important}}
 [data-slot="dialog-popup"],[data-slot="popover-popup"],[data-slot="menu-popup"]{{box-shadow:0 0 0 2px #5c5f63,6px 6px 0 rgba(0,0,0,.5)!important}}
 [data-slot="tooltip-popup"]{{background:#0c0d0e!important;color:#f0f0ec!important;box-shadow:0 0 0 1px #888b8e!important}}
