@@ -30,7 +30,7 @@ Then in T3 Code, open **Settings → Appearance** and select **Agent Works**.
 - **Update:** pull the latest changes and run `./install.sh` again.
 - **Uninstall:** run `./uninstall.sh`, then pick another theme.
 
-The install needs Python 3.
+The install needs Python 3. Tested on T3 Code (Beta) 0.1.10 on macOS. The theme hooks into T3 Code's markup, so a future app update can break parts of it; please open an issue if something looks off.
 
 ## Development
 
@@ -41,3 +41,7 @@ python3 -m unittest discover -s tests
 ```
 
 See [AGENTS.md](AGENTS.md) for how the build works and the T3 Code details it depends on.
+
+## License
+
+[MIT](LICENSE)
