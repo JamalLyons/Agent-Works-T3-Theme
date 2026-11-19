@@ -74,12 +74,14 @@ def wait_css(HZ):
     hold = ','.join(f'{w} {CONV}::before' for w in WAITS)
     rail = ','.join(f'{w} [data-slot="sidebar-inner"]::after' for w in WAITS)
     comp = ','.join(f'{w} [data-slot="composer-host"]' for w in WAITS)
+    glow = ','.join(f'{w} [data-slot="composer-host"]::before' for w in WAITS)   # blink only the glow; opacity on the host would fade the whole question card
     item = ','.join(f'[data-slot="{k}"][data-highlighted]' for k in ('menu-item', 'command-item', 'select-item', 'combobox-item'))
     out = f"""
 {hold}{{opacity:1;animation:aw-hold 1.6s steps(1) infinite}}
 @keyframes aw-hold{{50%{{opacity:.3}}}}
 {rail}{{opacity:1;animation:none;background:{HZ} right 0 top 0/3px 100% no-repeat,linear-gradient(270deg,rgba(255,154,46,.28),transparent)}}
-{comp}{{box-shadow:0 -2px {A},0 2px {A},-2px 0 {A},2px 0 {A},0 0 26px rgba(255,154,46,.35),5px 5px 0 2px rgba(0,0,0,.5)!important;animation:aw-hold 1.6s steps(1) infinite}}
+{comp}{{box-shadow:0 -2px {A},0 2px {A},-2px 0 {A},2px 0 {A},5px 5px 0 2px rgba(0,0,0,.5)!important}}
+{glow}{{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:0 0 26px rgba(255,154,46,.45);animation:aw-hold 1.6s steps(1) infinite}}
 [data-timeline-row-kind]>:has([data-approval-detail]){{position:relative;box-shadow:0 0 22px rgba(255,154,46,.3),4px 4px 0 2px rgba(0,0,0,.4)!important}}
 [data-timeline-row-kind]>:has([data-approval-detail])::before{{content:"";position:absolute;inset:-3px;padding:3px;pointer-events:none;background:{HZ};background-size:17px 17px;
 mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:aw-tape 1.2s linear infinite}}
@@ -143,7 +145,7 @@ def css(an, g, text, R, enc):
     rm = '@media (prefers-reduced-motion:reduce)'
     HZ = f'repeating-linear-gradient(-45deg,{A} 0 6px,#141517 6px 12px)'   # hazard tape
     WAIT_CSS = wait_css(HZ)
-    HOLD_ANIM = f'{",".join(f"{w} {CONV}::before" for w in WAITS)},{",".join(f"{w} [data-slot=composer-host]" for w in WAITS)},[data-timeline-row-kind]>:has([data-approval-detail])::before'
+    HOLD_ANIM = f'{",".join(f"{w} {CONV}::before" for w in WAITS)},{",".join(f"{w} [data-slot=composer-host]::before" for w in WAITS)},[data-timeline-row-kind]>:has([data-approval-detail])::before'
     SCAN_SB = 'repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)'
     out = f"""
 {CONV}{{position:relative;isolation:isolate;animation:aw-on .7s cubic-bezier(.2,.7,.2,1) both}}
