@@ -566,6 +566,14 @@ theme_css = f"""
 [data-slot="composer-host"]{{position:relative;overflow:visible!important;margin-top:44px!important;background:#141517!important;border-radius:0!important;border:0!important;box-shadow:0 -2px #888b8e,0 2px #888b8e,-2px 0 #888b8e,2px 0 #888b8e,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-host"]:focus-within{{box-shadow:0 -2px #dcdddb,0 2px #dcdddb,-2px 0 #dcdddb,2px 0 #dcdddb,5px 5px 0 2px rgba(0,0,0,.5)!important}}
 [data-slot="composer-shell"]::before{{display:none!important}}
+[data-composer-banner-surface],[data-composer-banner-surface]::before,[data-chat-composer-main-surface],[data-chat-composer-main-surface]::before,[data-chat-composer-main-surface]::after,[data-slot="composer-host"]::after{{border-radius:0!important}}
+[data-slot="composer-banner-attachment"]:has([data-chat-composer-top-drawer]){{width:100%!important;margin-bottom:0!important}}
+[data-chat-composer-top-drawer]::after{{display:none!important}}
+[data-composer-banner-surface]::before{{background:#1a1b1d!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;box-shadow:none!important;mask:none!important;-webkit-mask:none!important}}
+[data-chat-composer-main-surface]{{background:#141517!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important}}
+[data-chat-composer-main-surface]::after{{border:0!important}}
+[data-slot="composer-banner-attachment"]:has([data-chat-composer-top-drawer])+*,[data-slot="composer-banner-attachment"]:has([data-chat-composer-top-drawer])~* [data-chat-composer-main-surface]{{border-top:2px dashed #4a4d51!important}}
+body:has([data-chat-composer-top-drawer]) .composer-tiptap>:last-child::after{{display:none!important}}
 [data-slot="composer-host"] .composer-tiptap,[data-slot="composer-host"] .composer-tiptap>*{{position:static!important}}
 [data-slot="composer-host"] .composer-tiptap>:last-child::after{{content:"";position:absolute;top:-50px;width:34px;height:54px;margin-left:2px;pointer-events:none;z-index:5;image-rendering:pixelated;background:url("{m_sheet}") 0 0/68px 54px no-repeat}}
 [data-slot="composer-host"]:focus-within .composer-tiptap>:last-child::after{{background-position:-34px 0}}
