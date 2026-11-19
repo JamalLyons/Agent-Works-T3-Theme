@@ -8,6 +8,7 @@ An animated pixel-art factory theme for [T3 Code](https://github.com/pingdotgg/t
 
 - **A living background.** A 20-second looping assembly line: a chute, an inspector, a press with sparks, a tape robot, a welder, steam, light shafts and drifting dust.
 - **Lights on while the agent works.** The lamps, the **AGENT WORKS** sign and the belt chase lights switch on during a turn and go dark when it ends.
+- **The factory sleeps when nothing runs.** With no agent working, the line shuts down: the robots slump with their eyes shut, the belt stops, and Zzz drift up from a couple of sleepers. When any agent starts working, the factory wakes up.
 - **A sidebar that reacts too.** The factory continues behind the thread list, and an amber rail runs down its edge while any agent is working.
 - **Hold state.** When an agent waits for your approval or an answer, the lamps blink slowly and hazard tape wraps the request.
 - **A composer mascot.** A small robot sits on the composer and starts typing when you do.

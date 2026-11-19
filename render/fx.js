@@ -171,6 +171,7 @@
       g2.addColorStop(0, `rgba(${AMBER},${a})`); g2.addColorStop(1, `rgba(${AMBER},0)`);
       c.fillStyle = g2; c.beginPath(); c.arc(lx, by, 9, 0, TAU); c.fill();
     }
+    if (window.AW_SLEEP) return;   // idle frame: line shut down, no press or weld light
     // press impact: amber flash on the beat (.pr keyframe hit, from gen.py)
     const P = AN.pressHit;
     const pt = ((t % P.period) + P.period) % P.period - P.t;
