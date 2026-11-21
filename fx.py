@@ -23,10 +23,13 @@ def busy(sel):
     return ','.join(f'{b} {sel}' for b in BUSY)
 
 
-def overlay(an, g, text, R):
+def overlay(an, g, text, R, animate=True):
     """Lights-on layer: lamp cones and pools, lit sign, chase lights, LEDs.
 
     an: gen.ANCHORS (all positions). g, text, R: gen.py's pixel helpers.
+    animate=False drops the <style> block. The theme CSS uses the still version: any animation inside a
+    window-sized background image makes the app repaint and re-blend the whole layer every frame (about
+    45 points of GPU on an M-series Mac). lights.svg keeps the animated version for preview.gif.
     """
     BX0, BX1 = an['belt']['x0'], an['belt']['x1']
     sx, SY = an['sign']['x'], an['sign']['y']
@@ -60,8 +63,9 @@ def overlay(an, g, text, R):
           ".ld{animation:l .8s steps(1) infinite}.d{animation-delay:-.4s}@keyframes l{50%{opacity:.2}}"
           ".sg{animation:sg 5s steps(1) infinite}@keyframes sg{0%,100%{opacity:1}71%{opacity:.4}72%{opacity:1}}"
           "@media (prefers-reduced-motion:reduce){*{animation:none!important}}")
+    st = f"<style>{st}</style>" if animate else ''
     return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
-            f"shape-rendering='crispEdges'><style>{st}</style><defs>{defs}</defs>{s}</svg>")
+            f"shape-rendering='crispEdges'>{st}<defs>{defs}</defs>{s}</svg>")
 
 
 def zzz(an, g, text):
@@ -73,7 +77,8 @@ def zzz(an, g, text):
             z = g([(c, x2, y2, w, h) for c, x2, y2, w, h in text('Z', 0, 0, '#c1c3c3')])
             s += (f"<g transform='translate({x + dx} {y + dy - 5 * sc}) scale({sc})'>"
                   f"<g class='z' style='animation-delay:-{(j * 5 / 3 + i) % 5:.2f}s'>{z}</g></g>")
-    st = (".z{opacity:0;animation:z 5s linear infinite}"
+    # steps(10): 2 updates a second. A smooth drift repaints the window-sized idle layer every frame (~35 points of GPU).
+    st = (".z{opacity:0;animation:z 5s steps(10) infinite}"
           "@keyframes z{0%{opacity:0;transform:translate(0,2px)}20%{opacity:.85}70%{opacity:.6}100%{opacity:0;transform:translate(2px,-5px)}}"
           "@media (prefers-reduced-motion:reduce){.z{animation:none;opacity:.6}}")
     return ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 320' preserveAspectRatio='xMidYMax slice' "
@@ -99,7 +104,7 @@ def wait_css(HZ):
 {glow}{{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:0 0 26px rgba(255,154,46,.45);animation:aw-hold 1.6s steps(1) infinite}}
 [data-timeline-row-kind]>:has([data-approval-detail]){{position:relative;box-shadow:0 0 22px rgba(255,154,46,.3),4px 4px 0 2px rgba(0,0,0,.4)!important}}
 [data-timeline-row-kind]>:has([data-approval-detail])::before{{content:"";position:absolute;inset:-3px;padding:3px;pointer-events:none;background:{HZ};background-size:17px 17px;
-mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:aw-tape 1.2s linear infinite}}
+mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:aw-tape 2s steps(4) infinite}}
 @keyframes aw-tape{{to{{background-position:17px 0}}}}
 [data-command-palette]{{border-radius:0!important;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)!important;
 box-shadow:0 -3px {A1},0 0 0 2px #5c5f63,8px 8px 0 rgba(0,0,0,.55),0 0 40px rgba(255,154,46,.12)!important}}
@@ -129,7 +134,7 @@ background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 
 box-shadow:0 -2px #6a6d71,0 0 0 2px #4a4d51,inset 0 1px rgba(220,221,219,.06),6px 6px 0 rgba(0,0,0,.5)!important}}
 {CARD}::before{{content:"";position:absolute;left:0;right:0;top:-2px;height:2px;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s ease;
 background:repeating-linear-gradient(90deg,{A2} 0 6px,transparent 6px 16px) 0 0/32px 2px}}
-{busy(f'{CARD}::before')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-chase .8s linear 1.1s infinite}}
+{busy(f'{CARD}::before')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-chase 4s steps(8) 1.1s infinite}}
 @keyframes aw-chase{{to{{background-position:32px 0}}}}
 {CARD} [data-slot="separator"],{CARD} [role="separator"]{{height:2px!important;border:0!important;background:repeating-linear-gradient(90deg,#55585c 0 2px,transparent 2px 10px),#26282b!important}}
 {CARD} [data-slot="button"]{{border-radius:0!important}}
@@ -140,10 +145,9 @@ background:repeating-linear-gradient(90deg,{A2} 0 6px,transparent 6px 16px) 0 0/
 {PANEL}{{position:relative;isolation:isolate;border-left:2px solid #0c0d0e!important;box-shadow:inset 2px 0 #3a3d40!important}}
 {PANEL}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
 background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(rgba(17,18,20,.86),rgba(17,18,20,.93)),var(--aw-sleep) center bottom/cover no-repeat fixed}}
-{busy(f'{PANEL}::before')}{{background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(rgba(17,18,20,.86),rgba(17,18,20,.93)),var(--theme-background-image)}}
 {PANEL}::after{{content:"";position:absolute;top:-16px;bottom:0;left:0;width:2px;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
 background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px)}}
-{busy(f'{PANEL}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail .8s linear 1.1s infinite}}
+{busy(f'{PANEL}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail 2s steps(4) 1.1s infinite}}
 {PANEL} [data-right-panel-tabbar]{{background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px),linear-gradient(#232527,#1a1b1d)!important;
 border-bottom:2px solid #0c0d0e!important;box-shadow:0 1px #3a3d40!important}}
 {PANEL} [data-surface-subheader]{{background:rgba(20,21,23,.9)!important;border-bottom:2px solid #2a2c2f!important}}
@@ -158,10 +162,10 @@ def sleep_css(an, g, text, enc, sleep_uri):
     """Idle state: the still sleep frame (plus Zzz) covers the live WebP until an agent works anywhere.
 
     The image lives once in --aw-sleep on :root. The chat shows it on {CONV}::after (the idle layer, which fades
-    out when work starts, over the flickering lamps); the sidebar and right panel swap it in for the live scene
-    in their darkened ::before stacks. All use the live scene's fixed, window-sized `center bottom / cover`, so
-    the frame lines up with the WebP pixel for pixel. The WebP keeps playing underneath, so on waking the line
-    is already moving.
+    out when work starts, over the flickering lamps). The sidebar and right panel always show it in their
+    darkened ::before stacks: under 50-93% dimming the live scene barely showed, and drawing it there cost GPU. All use the live scene's fixed, window-sized `center bottom / cover`, so
+    the frame lines up with the WebP pixel for pixel. The chat's own background is also the sleep frame while
+    idle (gen.py), so nothing draws the WebP and it costs no GPU; it swaps in when work starts, under this fade.
     """
     z = 'data:image/svg+xml,' + enc(zzz(an, g, text))
     out = f"""
@@ -174,7 +178,7 @@ background:radial-gradient(ellipse 70% 60% at 50% 40%,transparent,rgba(0,0,0,.25
 
 def css(an, g, text, R, enc, sleep_uri):
     """Reactive CSS. enc: gen.enc, the data: URI escaper. sleep_uri: the idle frame as a data: URI."""
-    over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R))
+    over = 'data:image/svg+xml,' + enc(overlay(an, g, text, R, animate=False))
 
     rm = '@media (prefers-reduced-motion:reduce)'
     HZ = f'repeating-linear-gradient(-45deg,{A} 0 6px,#141517 6px 12px)'   # hazard tape
@@ -195,8 +199,8 @@ background:url("{over}") center bottom/cover no-repeat fixed;transition:opacity 
 {','.join(f'[data-timeline-row-kind="{k}"]>*' for k in ('work-live', 'working'))}{{position:relative;
 box-shadow:0 -2px {A1},0 2px {A1},-2px 0 {A1},2px 0 {A1},0 0 18px rgba(255,154,46,.28),4px 4px 0 2px rgba(0,0,0,.4)!important}}
 {','.join(f'[data-timeline-row-kind="{k}"]>*::after' for k in ('work-live', 'working'))}{{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;
-background:repeating-linear-gradient(90deg,{A2} 0 6px,transparent 6px 12px);background-size:24px 2px;animation:aw-belt .5s linear infinite;pointer-events:none}}
-@keyframes aw-belt{{to{{background-position:24px 0}}}}
+background:repeating-linear-gradient(90deg,{A2} 0 6px,transparent 6px 12px);background-size:24px 2px;animation:aw-belt 2s steps(4) infinite;pointer-events:none}}
+@keyframes aw-belt{{to{{background-position:12px 0}}}}
 [data-streaming="true"]>:last-child::after{{content:"";display:inline-block;width:.55em;height:1.05em;margin-left:2px;vertical-align:-.15em;
 background:{A};box-shadow:0 0 8px {A1};animation:aw-cur 1s steps(1) infinite}}
 @keyframes aw-cur{{50%{{opacity:0}}}}
@@ -207,11 +211,10 @@ body:has({LIVE}) [data-slot="composer-host"]{{box-shadow:0 -2px {A1},0 2px {A1},
 {SB}{{position:relative;isolation:isolate}}
 {SB}::before{{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
 background:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--aw-sleep) center bottom/cover no-repeat fixed}}
-{busy(f'{SB}::before')}{{background-image:{SCAN_SB},linear-gradient(90deg,rgba(17,18,20,.72),rgba(17,18,20,.5)),var(--theme-background-image)}}
 {SB}{{overflow:hidden}}
 {SB}::after{{content:"";position:absolute;top:-16px;bottom:0;right:0;width:48px;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.2s ease;will-change:transform;
 background:repeating-linear-gradient(180deg,{A2} 0 4px,transparent 4px 16px) right 0 top 0/2px 16px repeat-y,linear-gradient(270deg,rgba(255,154,46,.2),transparent)}}
-{busy(f'{SB}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail .8s linear 1.1s infinite}}
+{busy(f'{SB}::after')}{{opacity:1;animation:aw-flick 1.1s steps(1) both,aw-rail 2s steps(4) 1.1s infinite}}
 @keyframes aw-rail{{to{{transform:translateY(16px)}}}}
 [data-testid="sidebar-working-shelf-toggle"]{{color:{A}!important;text-shadow:0 0 6px rgba(255,154,46,.6)}}
 [data-testid="sidebar-working-shelf-toggle"]::before{{content:"";flex:none;width:6px;height:6px;background:{A2};box-shadow:0 0 0 1px {A1},0 0 8px {A};animation:aw-lamp 1.6s steps(1) infinite}}

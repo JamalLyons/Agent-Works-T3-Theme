@@ -618,7 +618,10 @@ svg.lucide{{stroke-linecap:square;stroke-linejoin:miter}}
 theme_css = ''.join(l.strip() for l in theme_css.strip().splitlines())
 # The scene comes from the rendered animated WebP beside the theme file (var(--theme-background-image)),
 # which already carries its own vignette, scanlines and shading; keep only the chat band on top.
-theme_css = theme_css.replace('@@BG@@', f'{BAND},var(--theme-background-image)') + fx.css(ANCHORS, g, text, R, enc, sleep_uri)
+# While no agent works, the chat shows the still sleep frame instead, so the WebP isn't drawn or decoded at all.
+theme_css = (theme_css.replace('@@BG@@', f'{BAND},var(--aw-sleep)')
+             + f"{fx.busy('[data-workspace-area="conversation"]')}{{background-image:{BAND},var(--theme-background-image)!important}}"
+             + fx.css(ANCHORS, g, text, R, enc, sleep_uri))
 CREDIT_CSS = '/* Agent Works by Jamal Lyons | jamallyons.com | x.com/codingwithjamal */'
 theme_css = CREDIT_CSS + theme_css
 
