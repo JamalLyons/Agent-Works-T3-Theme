@@ -2,8 +2,8 @@
 // Captures the overlay (lights.svg) on transparent frames and composites it over the rendered scene frames.
 import fs from 'node:fs';
 import { open } from './harness.mjs';
-const [svgPath, outDir] = process.argv.slice(2);
-const W = 1440, H = 960, FPS = 15, N = 300;
+const [svgPath, outDir, fps = '15', scale = '3'] = process.argv.slice(2);   // match the scene frames from render.sh
+const W = 480 * +scale, H = 320 * +scale, FPS = +fps, N = 20 * FPS;
 fs.mkdirSync(outDir, { recursive: true });
 const svg = fs.readFileSync(svgPath, 'utf8').replace('<svg ', `<svg width='${W}' height='${H}' `);
 const { browser, page, seek } = await open({ width: W, height: H });

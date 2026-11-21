@@ -90,8 +90,12 @@ class Build(unittest.TestCase):
         self.assertEqual(css.count('data:image/webp;base64,'), 1, 'sleep frame must live once, in --aw-sleep')
         self.assertLess(len(gen.sleep_uri), 20000, 'sleep frame eats the CSS budget; re-encode it smaller')
         # every place that shows the live scene must also show the sleep frame while idle
-        self.assertEqual(css.count('var(--theme-background-image) center bottom/cover'), 2, 'chat + settings only')
-        self.assertGreaterEqual(css.count('var(--aw-sleep)'), 3)
+        self.assertEqual(css.count('var(--theme-background-image) center bottom/cover'), 1, 'settings only')
+        self.assertGreaterEqual(css.count('var(--aw-sleep)'), 4)
+        # the live WebP costs GPU every frame it's drawn: outside settings, only busy rules may show it
+        for rule in re.findall(r'[^{}]*\{[^{}]*var\(--theme-background-image\)[^{}]*\}', css):
+            sel = rule.split('{')[0]
+            self.assertTrue('settings' in sel or 'body:has(' in sel, f'WebP shown while idle: {sel[:80]}')
 
     def test_sleepers_are_robot_heads(self):
         # each Zzz origin is the top-right corner of a worker's (sunken) head
